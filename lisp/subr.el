@@ -5516,7 +5516,8 @@ Return nil if there isn't one."
     (save-match-data
       (while (and loads
 		  (or (null (car load-elt))
-		      (not (string-match file-regexp (car load-elt)))))
+		      (not (ignore-errors
+                             (string-match file-regexp (car load-elt))))))
 	(setq loads (cdr loads)
 	      load-elt (and loads (car loads)))))
     load-elt))
