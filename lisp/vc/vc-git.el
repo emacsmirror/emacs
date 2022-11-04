@@ -391,7 +391,7 @@ in the order given by `git status'."
   "Return a string for `vc-mode-line' to put in the mode line for FILE."
   (let* ((rev (vc-working-revision file 'Git))
          (disp-rev (or (vc-git--symbolic-ref file)
-                       (and rev (substring rev 0 7))))
+                       (and rev (or (ignore-errors (substring rev 0 7)) rev))))
          (def-ml (vc-default-mode-line-string 'Git file))
          (help-echo (get-text-property 0 'help-echo def-ml))
          (face   (get-text-property 0 'face def-ml)))
