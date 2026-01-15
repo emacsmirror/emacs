@@ -3493,6 +3493,20 @@ diary and display and mark their contents in the calendar without
 importing them to the diary file.  The library uses the new iCalendar
 library (see above) and makes diary import and export more customizable.
 
++++
+*** New commands to display more months in the calendar.
+'calendar-show-more-months' and 'calendar-show-fewer-months' display
+more or fewer months in the calendar, respectively.  The calendar shows
+at most 12 months and at least 3 months.
+
++++
+*** 'calendar-scroll-left-three-months' and its variant are obsolete aliases.
+Because the calendar can display more than three months now, commands
+'calendar-scroll-left-three-months' and
+'calendar-scroll-right-three-months' have been renamed to
+'calendar-scroll-calendar-left' and 'calendar-scroll-calendar-right'.
+The old names are kept as obsolete aliases.
+
 ** Calc
 
 *** New user option 'calc-string-maximum-character'.
