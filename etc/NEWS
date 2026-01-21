@@ -4320,6 +4320,12 @@ of an inherently asynchronous command such as 'compile'.
 These produce the binary representation of a number.
 '%#b' and '%#B' prefix the bits with '0b' and '0B', respectively.
 
+** 'pp-eval-expression' can now insert results into the current buffer
+'pp-eval-expression' now takes an optional argument INSERT-P, which when
+non-nil inserts the result into the current buffer instead of displaying
+it in the echo area or a temporary buffer.  When called interactively,
+INSERT-P is set to the current prefix argument.
+
 
 * Changes in Emacs 31.1 on Non-Free Operating Systems
 
