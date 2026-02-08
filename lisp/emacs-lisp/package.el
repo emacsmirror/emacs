@@ -427,6 +427,11 @@ synchronously."
   :type 'natnum
   :version "28.1")
 
+(defcustom package-upgrade-keep-previous nil
+  "If non-nil, keep previous packages versions on upgrade."
+  :type 'boolean
+  :version "31.1")
+
 
 ;;; `package-desc' object definition
 ;; This is the struct used internally to represent packages.
@@ -2082,7 +2087,7 @@ NAME should be a symbol."
                          ;; An active built-in has never been "selected"
                          ;; before.  Mark it as installed explicitly.
                          (and pkg-desc 'dont-select))
-        (when pkg-desc
+        (when (and (not package-upgrade-keep-previous) pkg-desc)
           (package-delete pkg-desc 'force 'dont-unselect))))))
 
 (defun package--upgradeable-packages (&optional include-builtins)
@@ -3846,27 +3851,16 @@ consideration."
 The alist has the same form as `package-alist', namely a list
 of elements of the form (PKG . DESCS), but where DESCS is the `package-desc'
 object corresponding to the newer version."
-  (let (installed available upgrades)
-    ;; Build list of installed/available packages in this buffer.
-    (dolist (entry tabulated-list-entries)
-      ;; ENTRY is (PKG-DESC [NAME VERSION STATUS DOC])
-      (let ((pkg-desc (car entry))
-            (status (aref (cadr entry) 2)))
-        (cond ((member status '("installed" "dependency" "unsigned" "external" "built-in"))
-               (push pkg-desc installed))
-              ((member status '("available" "new"))
-               (setq available (package--append-to-alist pkg-desc available))))))
-    ;; Loop through list of installed packages, finding upgrades.
-    (dolist (pkg-desc installed)
-      (let* ((name (package-desc-name pkg-desc))
-             (avail-pkg (cadr (assq name available))))
-        (and avail-pkg
-             (version-list-< (package-desc-priority-version pkg-desc)
-                             (package-desc-priority-version avail-pkg))
-             (or (not (package--active-built-in-p pkg-desc))
-                 package-install-upgrade-built-in)
-             (push (cons name avail-pkg) upgrades))))
-    upgrades))
+  (mapcar
+   (lambda (pkg-name)
+     (cons pkg-name
+           (seq-find
+            (let ((curr (package-desc-version
+                         (cadr (assq pkg-name package-alist)))))
+              (lambda (pkg-desc)
+                (version-list-< curr (package-desc-version pkg-desc))))
+            (cdr (assq pkg-name package-archive-contents)))))
+   (package--upgradeable-packages)))
 
 (defvar package-menu--mark-upgrades-pending nil
   "Whether mark-upgrades is waiting for a refresh to finish.")
@@ -3889,7 +3883,8 @@ Implementation of `package-menu-mark-upgrades'."
                   ((equal pkg-desc upgrade)
                    (package-menu-mark-install))
                   (t
-                   (package-menu-mark-delete))))))
+                   (when (not package-upgrade-keep-previous)
+                     (package-menu-mark-delete)))))))
       (message "Packages marked for upgrading: %d"
                (length upgrades)))))
 
