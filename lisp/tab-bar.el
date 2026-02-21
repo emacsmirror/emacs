@@ -1504,7 +1504,7 @@ be scaled for display on the current frame."
                  (funcall tab-bar-tab-name-function)))
       (explicit-name . ,tab-explicit-name)
       ,@(if tab-group `((group . ,tab-group)))
-      (time . ,(float-time))
+      (time . ,(window-use-time))
       (ws . ,(window-state-get
               (frame-root-window (or frame (selected-frame))) 'writable))
       (wc . ,(current-window-configuration))
@@ -1547,6 +1547,7 @@ inherits the current tab's `explicit-name' parameter."
                  (funcall tab-bar-tab-name-function)))
       (explicit-name . ,tab-explicit-name)
       ,@(if tab-group `((group . ,tab-group)))
+      (time . ,(window-use-time))
       ;; Copy other possible parameters
       ,@(mapcan (lambda (param)
                   (unless (memq (car param)
