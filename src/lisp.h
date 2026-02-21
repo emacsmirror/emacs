@@ -3117,7 +3117,7 @@ enum Lisp_Fwd_Predicate
 
 struct Lisp_Fwd
 {
-  enum Lisp_Fwd_Type type : 8;
+  ENUM_BF (Lisp_Fwd_Type) type : 8;
   union
   {
     intmax_t *intvar;		/* when type == Lisp_Fwd_Int */
@@ -3126,7 +3126,7 @@ struct Lisp_Fwd
     struct
     {
       uint16_t offset;
-      enum Lisp_Fwd_Predicate predicate : 8;
+      ENUM_BF (Lisp_Fwd_Predicate) predicate : 8;
     } buf;			/* when type == Lisp_Fwd_Buffer_Obj */
     int kbdoffset;		/* when type == Lisp_Fwd_Kboard_Obj */
   } u;
