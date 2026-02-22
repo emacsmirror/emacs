@@ -511,9 +511,9 @@ terminal.
 ---
 *** After deleting, 'delete-frame' now selects the most recently used frame.
 Previously, after deleting a specified frame, 'delete-frame' would
-select the next eligible frame in the order of the frame list.  This is
-often unrelated to frames' recent use and can appear somewhat random to
-users.
+select the oldest visible frame on the same terminal.  To revert to the
+old behavior, set the new user option
+'after-delete-frame-select-mru-frame' to nil.
 
 +++
 *** New value 'force' for user option 'frame-inhibit-implied-resize'.
