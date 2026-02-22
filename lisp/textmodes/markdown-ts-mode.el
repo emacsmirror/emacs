@@ -41,10 +41,7 @@
 (require 'subr-x)
 (require 'outline)
 
-(declare-function treesit-node-parent "treesit.c")
-(declare-function treesit-node-child "treesit.c")
-(declare-function treesit-node-type "treesit.c")
-(declare-function treesit-parser-create "treesit.c")
+(treesit-declare-unavailable-functions)
 
 (add-to-list
  'treesit-language-source-alist
