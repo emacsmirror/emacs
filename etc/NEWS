@@ -3500,7 +3500,7 @@ more or fewer months in the calendar, respectively.  The calendar shows
 at most 12 months and at least 3 months.
 
 +++
-*** 'calendar-scroll-left-three-months' and its variant are obsolete aliases.
+*** 'calendar-scroll-left-three-months' and its variants are obsolete aliases.
 Because the calendar can display more than three months now, commands
 'calendar-scroll-left-three-months' and
 'calendar-scroll-right-three-months' have been renamed to
