@@ -6014,13 +6014,14 @@ DEFUN ("internal--hash-table-index-size",
 
 
 /************************************************************************
-			MD5, SHA-1, and SHA-2
+			MD5, SHA-1, SHA-2, and SHA-3
  ************************************************************************/
 
 #include "md5.h"
 #include "sha1.h"
 #include "sha256.h"
 #include "sha512.h"
+#include "sha3.h"
 
 /* Store into HEXBUF an unterminated hexadecimal character string
    representing DIGEST, which is binary data of size DIGEST_SIZE bytes.
@@ -6051,7 +6052,8 @@ DEFUN ("secure-hash-algorithms", Fsecure_hash_algorithms,
        doc: /* Return a list of all the supported `secure-hash' algorithms. */)
   (void)
 {
-  return list (Qmd5, Qsha1, Qsha224, Qsha256, Qsha384, Qsha512);
+  return list (Qmd5, Qsha1, Qsha224, Qsha256, Qsha384, Qsha512,
+	       Qsha3_224, Qsha3_256, Qsha3_384, Qsha3_512);
 }
 
 /* Extract data from a string or a buffer. SPEC is a list of
@@ -6290,6 +6292,26 @@ secure_hash (Lisp_Object algorithm, Lisp_Object object, Lisp_Object start,
       digest_size = SHA512_DIGEST_SIZE;
       hash_func	  = sha512_buffer;
     }
+  else if (EQ (algorithm, Qsha3_224))
+    {
+      digest_size = SHA3_224_DIGEST_SIZE;
+      hash_func	  = sha3_224_buffer;
+    }
+  else if (EQ (algorithm, Qsha3_256))
+    {
+      digest_size = SHA3_256_DIGEST_SIZE;
+      hash_func	  = sha3_256_buffer;
+    }
+  else if (EQ (algorithm, Qsha3_384))
+    {
+      digest_size = SHA3_384_DIGEST_SIZE;
+      hash_func	  = sha3_384_buffer;
+    }
+  else if (EQ (algorithm, Qsha3_512))
+    {
+      digest_size = SHA3_512_DIGEST_SIZE;
+      hash_func	  = sha3_512_buffer;
+    }
   else
     error ("Invalid algorithm arg: %s", SDATA (Fsymbol_name (algorithm)));
 
@@ -6351,12 +6373,16 @@ anything security-related.  See `secure-hash' for alternatives.  */)
 DEFUN ("secure-hash", Fsecure_hash, Ssecure_hash, 2, 5, 0,
        doc: /* Return the secure hash of OBJECT, a buffer or string.
 ALGORITHM is a symbol specifying the hash to use:
-- md5    corresponds to MD5, produces a 32-character signature
-- sha1   corresponds to SHA-1, produces a 40-character signature
-- sha224 corresponds to SHA-2 (SHA-224), produces a 56-character signature
-- sha256 corresponds to SHA-2 (SHA-256), produces a 64-character signature
-- sha384 corresponds to SHA-2 (SHA-384), produces a 96-character signature
-- sha512 corresponds to SHA-2 (SHA-512), produces a 128-character signature
+- md5      corresponds to MD5, produces a 32-character signature
+- sha1     corresponds to SHA-1, produces a 40-character signature
+- sha224   corresponds to SHA-2 (SHA-224), produces a 56-character signature
+- sha256   corresponds to SHA-2 (SHA-256), produces a 64-character signature
+- sha384   corresponds to SHA-2 (SHA-384), produces a 96-character signature
+- sha512   corresponds to SHA-2 (SHA-512), produces a 128-character signature
+- sha3-224 corresponds to SHA-3 (SHA3-224), produces a 56-character signature
+- sha3-256 corresponds to SHA-3 (SHA3-256), produces a 64-character signature
+- sha3-384 corresponds to SHA-3 (SHA3-384), produces a 96-character signature
+- sha3-512 corresponds to SHA-3 (SHA3-512), produces a 128-character signature
 
 The two optional arguments START and END are positions specifying for
 which part of OBJECT to compute the hash.  If nil or omitted, uses the
@@ -6718,12 +6744,16 @@ syms_of_fns (void)
   /* Crypto and hashing stuff.  */
   DEFSYM (Qiv_auto, "iv-auto");
 
-  DEFSYM (Qmd5,    "md5");
-  DEFSYM (Qsha1,   "sha1");
-  DEFSYM (Qsha224, "sha224");
-  DEFSYM (Qsha256, "sha256");
-  DEFSYM (Qsha384, "sha384");
-  DEFSYM (Qsha512, "sha512");
+  DEFSYM (Qmd5,      "md5");
+  DEFSYM (Qsha1,     "sha1");
+  DEFSYM (Qsha224,   "sha224");
+  DEFSYM (Qsha256,   "sha256");
+  DEFSYM (Qsha384,   "sha384");
+  DEFSYM (Qsha512,   "sha512");
+  DEFSYM (Qsha3_224, "sha3-224");
+  DEFSYM (Qsha3_256, "sha3-256");
+  DEFSYM (Qsha3_384, "sha3-384");
+  DEFSYM (Qsha3_512, "sha3-512");
 
   /* Miscellaneous stuff.  */
 
