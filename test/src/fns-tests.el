@@ -949,8 +949,16 @@
   (should-error (reverse (dot2 1 2)) :type 'wrong-type-argument))
 
 (ert-deftest test-cycle-equal ()
-  (should-error (equal (cyc1 1) (cyc1 1)))
-  (should-error (equal (cyc2 1 2) (cyc2 1 2))))
+  (should (equal (cyc1 1) (cyc1 1)))
+  (should (equal (cyc2 1 2) (cyc2 1 2)))
+
+  (cl-labels ((cycle (x) (let ((y (copy-sequence x))) (nconc y y))))
+    (should-not (equal (cycle '(1 2 3)) '(1 2 3 1 2 3)))
+    (should-not (equal '(1 2 3 1 2 3) (cycle '(1 2 3))))
+    (should (equal (cycle '(1 2 3)) (cycle '(1 2 3 1 2 3))))
+    (should (equal (cycle '(1 2 3 1 2 3)) (cycle '(1 2 3))))
+    (should (equal (cycle '(1 2 3)) (append '(1 2) (cycle '(3 1 2 3 1 2)))))
+    (should (equal (append '(1 2) (cycle '(3 1 2 3 1 2))) (cycle '(1 2 3))))))
 
 (ert-deftest test-cycle-nconc ()
   (should-error (nconc (cyc1 1) 'tail) :type 'circular-list)

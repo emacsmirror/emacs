@@ -2835,6 +2835,9 @@ equal_no_quit (Lisp_Object o1, Lisp_Object o2)
 static ptrdiff_t hash_find_with_hash (struct Lisp_Hash_Table *h,
 				      Lisp_Object key, hash_hash_t hash);
 
+static bool internal_equal_cycle (Lisp_Object o1, Lisp_Object o2,
+				  enum equal_kind equal_kind,
+				  int depth, Lisp_Object *ht);
 
 /* Return true if O1 and O2 are equal.  EQUAL_KIND specifies what kind
    of equality test to use: if it is EQUAL_NO_QUIT, do not check for
@@ -2909,7 +2912,7 @@ internal_equal_1 (Lisp_Object o1, Lisp_Object o2, enum equal_kind equal_kind,
 	      return true;
 	  }
       else
-	FOR_EACH_TAIL (o1)
+	FOR_EACH_TAIL_BASIC (o1,)
 	  {
 	    if (! CONSP (o2))
 	      return false;
@@ -2919,6 +2922,11 @@ internal_equal_1 (Lisp_Object o1, Lisp_Object o2, enum equal_kind equal_kind,
 	    o2 = XCDR (o2);
 	    if (EQ (XCDR (o1), o2))
 	      return true;
+
+	    if (FOR_EACH_TAIL_STEP_CYCLEP (o1, true))
+	      /* Cycle in o1; see if there is one in o2 as well.  */
+	      return (CONSP (o2)
+		      && internal_equal_cycle (o2, o1, equal_kind, depth, ht));
 	  }
       depth++;
       goto tail_recurse;
@@ -3007,6 +3015,34 @@ internal_equal_1 (Lisp_Object o1, Lisp_Object o2, enum equal_kind equal_kind,
       break;
     }
 
+  return false;
+}
+
+/* Slow path comparison when o1 and o2 are lists and o2 is circular.  */
+static bool
+internal_equal_cycle (Lisp_Object o1, Lisp_Object o2,
+		      enum equal_kind equal_kind, int depth, Lisp_Object *ht)
+{
+  eassert (CONSP (o1) && CONSP (o2));
+  eassert (equal_kind != EQUAL_NO_QUIT);
+
+  FOR_EACH_TAIL_BASIC (o1,)
+    {
+      if (!CONSP (o2))
+	return false;
+      if (!internal_equal_1 (XCAR (o1), XCAR (o2), equal_kind, depth + 1, ht))
+	return false;
+      o2 = XCDR (o2);
+      if (EQ (XCDR (o1), o2))
+	return true;
+
+      if (FOR_EACH_TAIL_STEP_CYCLEP (o1, true))
+	/* Cycle in o1 detected.  Since o2 is circular too and no
+	   differences were found, they are equal.
+	   (Their structures may differ but that's not relevant to `equal'.)  */
+	return true;
+    }
+  /* o1 terminated but o2 is circular: not equal.  */
   return false;
 }
 

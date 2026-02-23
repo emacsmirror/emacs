@@ -4037,6 +4037,11 @@ These return non-nil for lists where any and all elements, respectively,
 satisfy a given predicate.
 
 +++
+** 'equal' now compares circular lists without raising an error.
+Comparing very deeply nested objects will still fail, but 'equal'
+will no longer signal the 'circular-list' error.
+
++++
 ** The 'defvar-local' macro second argument is now optional.
 This means that you can now call it with just one argument, like
 'defvar', to declare a variable both special, and buffer-local.
