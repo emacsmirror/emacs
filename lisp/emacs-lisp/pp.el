@@ -394,21 +394,20 @@ space available between point and the window margin."
        'help-echo "mouse-2, RET: pretty print value in another buffer"))))
 
 ;;;###autoload
-(defun pp-eval-expression (expression &optional insert-p)
+(defun pp-eval-expression (expression &optional insert-value)
   "Evaluate EXPRESSION and pretty-print its value.
-If INSERT-P is non-nil, insert the value into the current buffer instead
-of displaying it in the echo area or a temporary buffer.  When called
-interactively, read an Emacs Lisp expression and set INSERT-P to the
-current prefix argument.  The value is also added to front of the list
-variable `values'."
+Also add the value to the front of the list in the variable `values'.
+When called interactively, read an Emacs Lisp expression.
+With a prefix argument (when called from Lisp, with optional argument
+INSERT-VALUE non-nil), insert the value into the current buffer instead
+of displaying it in the echo area or a temporary buffer."
   (interactive
    (list (read--expression "Eval: ") current-prefix-arg))
   (message "Evaluating...")
   (let ((result (eval expression lexical-binding)))
     (values--store-value result)
-    (if insert-p
-        (let ((deactivate-mark))
-          (insert (pp-to-string result)))
+    (if insert-value
+        (insert (pp-to-string result))
       (pp-display-expression result "*Pp Eval Output*" pp-use-max-width))))
 
 ;;;###autoload
