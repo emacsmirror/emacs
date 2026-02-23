@@ -3764,8 +3764,8 @@ all versions, sleep events require Windows 8 or later).
 ---
 ** 'FOO-ts-mode-indent-offset' renamed to 'FOO-ts-indent-offset'.
 When the new TS modes were introduced, a mistake was made where those
-modes used `FOO-mode-indent-offset` instead of the previous "standard"
-`FOO-indent-offset`.  The following names are the new names:
+modes used 'FOO-mode-indent-offset' instead of the previous conventional
+'FOO-indent-offset`.  The following names are the new names:
 'toml-ts-indent-offset', 'mhtml-ts-js-css-indent-offset',
 'html-ts-indent-offset', 'typescript-ts-indent-offset',
 'php-ts-indent-offset', 'php-ts-html-indent-offset',
