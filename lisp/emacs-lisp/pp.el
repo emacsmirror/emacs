@@ -407,7 +407,8 @@ of displaying it in the echo area or a temporary buffer."
   (let ((result (eval expression lexical-binding)))
     (values--store-value result)
     (if insert-value
-        (insert (pp-to-string result))
+        (let (deactivate-mark)
+          (insert (pp-to-string result)))
       (pp-display-expression result "*Pp Eval Output*" pp-use-max-width))))
 
 ;;;###autoload
