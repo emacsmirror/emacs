@@ -938,4 +938,87 @@ sufficiently large to avoid truncation."
                        (pos-bol 2) (pos-eol 2))
     (should (equal (buffer-string) "toto\nEmacs forever!\n"))))
 
+;; Additional coverage for editfns primitives used in batch mode.
+
+(ert-deftest editfns-tests--byte-to-position ()
+  (with-temp-buffer
+    (insert "éa")
+    (let* ((b1 (position-bytes 1))
+           (b2 (position-bytes 2)))
+      (should (= b1 1))
+      (should (> b2 b1))
+      (should (= (byte-to-position b1) 1))
+      (should (= (byte-to-position b2) 2))
+      ;; Byte position in the middle of a multibyte character maps back
+      ;; to the character head.
+      (should (= (byte-to-position (1- b2)) 1))
+      (should-not (byte-to-position 0))
+      (should-not (byte-to-position (1+ (position-bytes (point-max))))))))
+
+(ert-deftest editfns-tests--byte-to-string ()
+  (let ((s (byte-to-string 65)))
+    (should (stringp s))
+    (should (not (multibyte-string-p s)))
+    (should (= (length s) 1))
+    (should (= (aref s 0) 65)))
+  (should-error (byte-to-string -1))
+  (should-error (byte-to-string 256)))
+
+(ert-deftest editfns-tests--insert-byte ()
+  (with-temp-buffer
+    (insert-byte ?A 3)
+    (should (equal (buffer-string) "AAA")))
+  (with-temp-buffer
+    (insert-byte 200 1)
+    (should (= (aref (buffer-string) 0) 200)))
+  (should-error (with-temp-buffer (insert-byte 256 1))))
+
+(ert-deftest editfns-tests--insert-buffer-substring ()
+  (with-temp-buffer
+    (let ((source (current-buffer)))
+      (insert "abcDEF")
+      (put-text-property 4 6 'foo t)
+      (with-temp-buffer
+        (insert "X")
+        (insert-buffer-substring source 2 5)
+        (should (equal (buffer-string) "XbcD"))
+        (should-not (get-text-property 2 'foo))
+        (should (get-text-property 4 'foo))))))
+
+(ert-deftest editfns-tests--insert-before-markers-and-inherit ()
+  (with-temp-buffer
+    (insert (propertize "a" 'foo t))
+    (let ((m (point-marker)))
+      (insert-before-markers-and-inherit "b")
+      (should (equal (buffer-string) "ab"))
+      (should (= (marker-position m) (point)))
+      (should (eq (get-text-property 2 'foo) t)))))
+
+(ert-deftest editfns-tests--field-string-and-delete ()
+  (with-temp-buffer
+    (insert "abcDEFghi")
+    (put-text-property 1 4 'field 'a)
+    (put-text-property 4 7 'field 'b)
+    (put-text-property 7 10 'field 'c)
+    (let ((s (field-string-no-properties 2)))
+      (should (equal s "abc"))
+      (should-not (text-properties-at 0 s)))
+    (should (equal (field-string-no-properties 5) "DEF"))
+    (delete-field 5)
+    (should (equal (buffer-string) "abcghi"))
+    (should (equal (field-string-no-properties 5) "ghi"))))
+
+(ert-deftest editfns-tests--constrain-to-field ()
+  (let ((inhibit-field-text-motion nil))
+    (with-temp-buffer
+      (insert "abcDEFghi")
+      (put-text-property 1 4 'field 'a)
+      (put-text-property 4 7 'field 'b)
+      (put-text-property 7 10 'field 'c)
+      (should (= (constrain-to-field 2 5) 4))
+      (should (= (constrain-to-field 8 5) 7))
+      (goto-char 2)
+      (should (= (constrain-to-field nil 5) 4))
+      (should (= (point) 4)))))
+
 ;;; editfns-tests.el ends here
