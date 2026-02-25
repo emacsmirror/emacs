@@ -132,6 +132,47 @@
   "Number of args for `propertize' must be odd."
   (should-error (propertize "foo" 'bar) :type 'wrong-number-of-arguments))
 
+(ert-deftest editfns-tests--line-boundaries ()
+  (with-temp-buffer
+    (insert "ab\ncd\n")
+    (goto-char (point-min))
+    (should (bobp))
+    (should (bolp))
+    (should-not (eobp))
+    (should (= (line-beginning-position) (point-min)))
+    (should (= (line-end-position) 3))
+    (forward-char 1)
+    (should-not (bolp))
+    (should-not (eolp))
+    (goto-char (line-end-position))
+    (should (eolp))
+    (forward-char 1)
+    (should (bolp))
+    (goto-char (point-max))
+    (should (eobp))
+    (should-not (bobp))))
+
+(ert-deftest editfns-tests--current-column-move-to-column ()
+  (with-temp-buffer
+    (insert "ab  cd\n")
+    (goto-char (point-min))
+    (should (= (current-column) 0))
+    (move-to-column 4)
+    (should (= (current-column) 4))
+    (should (= (point) (+ (point-min) 4)))))
+
+(ert-deftest editfns-tests--pos-bol-eol ()
+  (with-temp-buffer
+    (insert "ab\ncde\nf")
+    (goto-char (point-min))
+    (forward-char 1)
+    (should (= (pos-bol) (point-min)))
+    (should (= (pos-eol) 3))
+    (should (= (pos-bol 2) 4))
+    (should (= (pos-eol 2) 7))
+    (should (= (pos-bol 3) 8))
+    (should (= (pos-eol 3) 9))))
+
 ;; Tests for bug#5131.
 (defun transpose-test-reverse-word (start end)
   "Reverse characters in a word by transposing pairs of characters."

@@ -69,6 +69,27 @@
       (should (= (marker-position m1) 2))
       (should (= (marker-position m2) 3)))))
 
+(ert-deftest marker-tests--set-marker-insertion-type ()
+  (with-temp-buffer
+    (insert "ab")
+    (goto-char 2)
+    (let ((m (point-marker)))
+      (should-not (marker-insertion-type m))
+      (should (eq (set-marker-insertion-type m t) t))
+      (should (marker-insertion-type m))
+      (insert "X")
+      (should (= (marker-position m) 3))
+      (goto-char (marker-position m))
+      (should (eq (set-marker-insertion-type m nil) nil))
+      (should-not (marker-insertion-type m))
+      (insert "Y")
+      (should (= (marker-position m) 3)))))
+
+(ert-deftest marker-tests--copy-marker-nil ()
+  (let ((m (copy-marker nil)))
+    (should-not (marker-buffer m))
+    (should-not (marker-position m))))
+
 (ert-deftest marker-tests--last-position-after-kill ()
   (let (marker pos)
     (with-temp-buffer

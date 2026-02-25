@@ -269,6 +269,43 @@ with parameters from the *Messages* buffer modification."
   (with-temp-buffer
     (should (eq (buffer-base-buffer (current-buffer)) nil))))
 
+(ert-deftest buffer-tests--basic-buffer-primitives ()
+  (let ((buf (generate-new-buffer " *buffer-tests-basic*")))
+    (unwind-protect
+        (progn
+          (should (bufferp buf))
+          (should (buffer-live-p buf))
+          (should (equal (buffer-name buf) " *buffer-tests-basic*"))
+          (should (eq (get-buffer " *buffer-tests-basic*") buf))
+          (should (eq (get-buffer buf) buf))
+          (should (eq (get-buffer-create " *buffer-tests-basic*") buf))
+          (with-current-buffer buf
+            (insert "abc")
+            (should (= (buffer-size) 3))
+            (should (eq (set-buffer buf) buf)))
+          (with-current-buffer buf
+            (let ((new-name (rename-buffer " *buffer-tests-renamed*" t)))
+              (should (equal new-name " *buffer-tests-renamed*"))
+              (should (eq (get-buffer new-name) buf))))
+          (should (memq buf (buffer-list))))
+      (when (buffer-live-p buf)
+        (kill-buffer buf)))
+    (should-not (buffer-live-p buf))))
+
+(ert-deftest buffer-tests--other-buffer ()
+  (let ((b1 (generate-new-buffer " *buffer-tests-ob1*"))
+        (b2 (generate-new-buffer " *buffer-tests-ob2*")))
+    (unwind-protect
+        (with-current-buffer b1
+          (let ((other (other-buffer (current-buffer) t)))
+            (should (bufferp other))
+            (should (buffer-live-p other))
+            (should-not (eq other (current-buffer)))))
+      (when (buffer-live-p b1)
+        (kill-buffer b1))
+      (when (buffer-live-p b2)
+        (kill-buffer b2)))))
+
 (ert-deftest buffer-tests--overlays-indirect-bug58928 ()
   (with-temp-buffer
     (insert "hello world")

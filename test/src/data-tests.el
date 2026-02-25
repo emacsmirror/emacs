@@ -860,6 +860,21 @@ comparing the subr with a much slower Lisp implementation."
     (data-tests-check-sign (% -1 -3) (% nb1 nb3))
     (data-tests-check-sign (mod -1 -3) (mod nb1 nb3))))
 
+(ert-deftest data-tests-bignum-remainder-invariants ()
+  (let* ((b (1+ most-positive-fixnum))
+         (d 7)
+         (r (mod b d)))
+    (should (= b (+ (* d (floor (/ b d))) r)))
+    (should (<= 0 r))
+    (should (< r (abs d))))
+  (let* ((b (- (1+ most-positive-fixnum)))
+         (d 7)
+         (q (/ b d))
+         (r (% b d)))
+    (should (= b (+ (* q d) r)))
+    (should (<= r 0))
+    (should (> r (- (abs d))))))
+
 (ert-deftest data-tests-mod-0 ()
   (dolist (num (list (1- most-negative-fixnum) -1 0 1
                      (1+ most-positive-fixnum)))
