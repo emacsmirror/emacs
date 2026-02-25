@@ -1752,7 +1752,6 @@ See Info node `(elisp) Integer Basics'."
          base64-decode-string base64-encode-string base64url-encode-string
          buffer-hash buffer-line-statistics
          compare-strings concat copy-alist copy-hash-table copy-sequence elt
-         equal equal-including-properties
          featurep get
          gethash hash-table-count hash-table-rehash-size
          hash-table-rehash-threshold hash-table-size hash-table-test
@@ -1890,7 +1889,7 @@ See Info node `(elisp) Integer Basics'."
          ;; fileio.c
          default-file-modes
          ;; fns.c
-         eql
+         equal equal-including-properties eql
          hash-table-p identity proper-list-p safe-length
          secure-hash-algorithms
          ;; frame.c
