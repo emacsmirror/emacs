@@ -4329,6 +4329,14 @@ These produce the binary representation of a number.
 With a prefix argument, 'pp-eval-expression' inserts the result into the
 current buffer, just like 'eval-expression' already did.
 
++++
+** New function 'multiple-command-partition-arguments'.
+This function partitions a list of command arguments that might be
+arbitrarily long.  It can be used in cases in which it's known to be
+safe to run the command multiple times on subsequent partitions of the
+list of arguments.  The variable 'command-line-max-length' controls the
+partitioning.
+
 
 * Changes in Emacs 31.1 on Non-Free Operating Systems
 
