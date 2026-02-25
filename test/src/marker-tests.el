@@ -57,4 +57,27 @@
     (set-marker marker-2 marker-1)
     (should (goto-char marker-2))))
 
+(ert-deftest marker-tests--insertion-type ()
+  (with-temp-buffer
+    (insert "ab")
+    (goto-char 2)
+    (let ((m1 (point-marker))
+          (m2 (copy-marker (point) t)))
+      (should-not (marker-insertion-type m1))
+      (should (marker-insertion-type m2))
+      (insert "X")
+      (should (= (marker-position m1) 2))
+      (should (= (marker-position m2) 3)))))
+
+(ert-deftest marker-tests--last-position-after-kill ()
+  (let (marker pos)
+    (with-temp-buffer
+      (insert "abc")
+      (setq marker (point-marker))
+      (setq pos (point))
+      (should (= (marker-position marker) pos)))
+    (should-not (marker-buffer marker))
+    (should-not (marker-position marker))
+    (should (= (marker-last-position marker) pos))))
+
 ;;; marker-tests.el ends here
