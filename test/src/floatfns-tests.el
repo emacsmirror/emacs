@@ -31,6 +31,21 @@
 (ert-deftest floatfns-tests-tan ()
   (should (= (tan 0) 0.0)))
 
+(ert-deftest floatfns-tests-asin-acos-atan ()
+  (let ((eps 1e-12))
+    (should (< (abs (- (asin 0.0) 0.0)) eps))
+    (should (< (abs (- (asin 1.0) (/ float-pi 2))) eps))
+    (should (< (abs (- (acos 1.0) 0.0)) eps))
+    (should (< (abs (- (acos 0.0) (/ float-pi 2))) eps))
+    (should (< (abs (- (atan 0.0) 0.0)) eps))
+    (should (< (abs (- (atan 1.0) (/ float-pi 4))) eps))))
+
+(ert-deftest floatfns-tests-copysign ()
+  (should (= (copysign 1.0 2.0) 1.0))
+  (should (= (copysign 1.0 -2.0) -1.0))
+  (should (= (copysign -1.0 2.0) 1.0))
+  (should (= (copysign -1.0 -2.0) -1.0)))
+
 (ert-deftest floatfns-tests-isnan ()
   (should (isnan 0.0e+NaN))
   (should (isnan -0.0e+NaN))

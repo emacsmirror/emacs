@@ -535,6 +535,58 @@
   (should (equal (fns-tests--with-region base64-encode-region "\x14\xfb\x9c\x03\xd9\x7e") "FPucA9l+"))
   (should (equal (fns-tests--with-region base64-encode-region "\x14\xfb\x9c\x03\xd9\x7f") "FPucA9l/")))
 
+(defun fns-tests--base64-decode-region (input &optional base64url ignore-invalid)
+  (with-temp-buffer
+    (set-buffer-multibyte nil)
+    (insert input)
+    (let ((len (base64-decode-region (point-min) (point-max)
+                                     base64url ignore-invalid)))
+      (list len (buffer-string)))))
+
+(defun fns-tests--as-unibyte (string)
+  (encode-coding-string string 'binary))
+
+(ert-deftest fns-tests-base64-decode-region ()
+  ;; standard variant RFC2045
+  (should (equal (fns-tests--base64-decode-region "") '(0 "")))
+  (should (equal (fns-tests--base64-decode-region "Zg==") '(1 "f")))
+  (should (equal (fns-tests--base64-decode-region "Zm8=") '(2 "fo")))
+  (should (equal (fns-tests--base64-decode-region "Zm9v") '(3 "foo")))
+  (should (equal (fns-tests--base64-decode-region "Zm9vYg==") '(4 "foob")))
+  (should (equal (fns-tests--base64-decode-region "Zm9vYmE=") '(5 "fooba")))
+  (should (equal (fns-tests--base64-decode-region "Zm9vYmFy") '(6 "foobar")))
+  (let* ((res (fns-tests--base64-decode-region "FPucA9l+"))
+         (len (nth 0 res))
+         (out (nth 1 res)))
+    (should (= len (string-bytes out)))
+    (should (equal (fns-tests--as-unibyte out)
+                   (fns-tests--as-unibyte "\x14\xfb\x9c\x03\xd9\x7e"))))
+  (let* ((res (fns-tests--base64-decode-region "FPucA9l/"))
+         (len (nth 0 res))
+         (out (nth 1 res)))
+    (should (= len (string-bytes out)))
+    (should (equal (fns-tests--as-unibyte out)
+                   (fns-tests--as-unibyte "\x14\xfb\x9c\x03\xd9\x7f"))))
+
+  ;; url variant
+  (let* ((res (fns-tests--base64-decode-region "FPucA9l-" t))
+         (len (nth 0 res))
+         (out (nth 1 res)))
+    (should (= len (string-bytes out)))
+    (should (equal (fns-tests--as-unibyte out)
+                   (fns-tests--as-unibyte "\x14\xfb\x9c\x03\xd9\x7e"))))
+  (let* ((res (fns-tests--base64-decode-region "FPucA9l_" t))
+         (len (nth 0 res))
+         (out (nth 1 res)))
+    (should (= len (string-bytes out)))
+    (should (equal (fns-tests--as-unibyte out)
+                   (fns-tests--as-unibyte "\x14\xfb\x9c\x03\xd9\x7f"))))
+
+  ;; ignore invalid characters
+  (should (equal (fns-tests--base64-decode-region "Zg==@" nil t) '(1 "f")))
+  (should (equal (fns-tests--base64-decode-region "Zg==@" t t) '(1 "f")))
+  (should-error (fns-tests--base64-decode-region "Zg=")))
+
 (ert-deftest fns-tests-base64-encode-string ()
   ;; standard variant RFC2045
   (should (equal (base64-encode-string "") ""))

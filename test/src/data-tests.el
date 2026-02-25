@@ -85,6 +85,11 @@ this is exactly representable and is greater than
   (should (equal (subr-name (symbol-function 'cons)) "cons"))
   (should (equal (subr-name (symbol-function 'if)) "if")))
 
+(ert-deftest data-tests-byteorder ()
+  (let ((bo (byteorder)))
+    (should (integerp bo))
+    (should (memq bo (list ?B ?l)))))
+
 (ert-deftest data-tests-= ()
   (should-error (=))
   (should (= 1))
