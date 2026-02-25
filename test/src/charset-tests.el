@@ -25,6 +25,57 @@
   "Test `decode-char'."
   (should-error (decode-char 'ascii 0.5)))
 
+(ert-deftest charset-tests-charsetp ()
+  (should (charsetp 'ascii))
+  (should (charsetp 'unicode))
+  (should-not (charsetp 'charset-tests-no-such-charset)))
+
+(ert-deftest charset-tests-charset-id-internal ()
+  (let ((id (charset-id-internal 'ascii)))
+    (should (integerp id))
+    (should (<= 0 id))))
+
+(ert-deftest charset-tests-charset-plist ()
+  (let ((plist (charset-plist 'ascii)))
+    (should (listp plist))
+    (should (stringp (plist-get plist :short-name)))))
+
+(ert-deftest charset-tests-charset-priority-list ()
+  (let ((list (charset-priority-list)))
+    (should (listp list))
+    (should (consp list))
+    (should (memq 'ascii list))
+    (dolist (cs list)
+      (should (charsetp cs))))
+  (let ((highest (charset-priority-list t)))
+    (should (symbolp highest))
+    (should (charsetp highest))))
+
+(ert-deftest charset-tests-charset-after ()
+  (with-temp-buffer
+    (insert "a")
+    (goto-char (point-min))
+    (should (eq (charset-after) 'ascii))
+    (should-not (charset-after (1+ (point-max))))))
+
+(ert-deftest charset-tests-find-charset-string ()
+  (let ((charsets (find-charset-string "abc")))
+    (should (memq 'ascii charsets))
+    (dolist (cs charsets)
+      (should (charsetp cs))))
+  (let ((charsets (find-charset-string "あ")))
+    (should (consp charsets))
+    (dolist (cs charsets)
+      (should (charsetp cs)))))
+
+(ert-deftest charset-tests-find-charset-region ()
+  (with-temp-buffer
+    (insert "abc")
+    (let ((charsets (find-charset-region (point-min) (point-max))))
+      (should (memq 'ascii charsets))
+      (dolist (cs charsets)
+        (should (charsetp cs))))))
+
 (provide 'charset-tests)
 
 ;;; charset-tests.el ends here

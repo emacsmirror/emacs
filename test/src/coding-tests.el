@@ -421,6 +421,48 @@
         (should-not (eq (encode-coding-string s coding nil) s))
         (should (eq (encode-coding-string s coding t) s))))))
 
+(ert-deftest coding-tests-coding-system-p ()
+  (should (coding-system-p nil))
+  (should (coding-system-p 'utf-8))
+  (should-not (coding-system-p 'coding-tests-no-such-system)))
+
+(ert-deftest coding-tests-check-coding-system ()
+  (should (eq (check-coding-system 'utf-8) 'utf-8))
+  (should (eq (check-coding-system nil) nil))
+  (should-error (check-coding-system 'coding-tests-no-such-system)
+                :type 'coding-system-error))
+
+(ert-deftest coding-tests-coding-system-priority-list ()
+  (let ((list (coding-system-priority-list)))
+    (should (listp list))
+    (should (consp list))
+    (dolist (cs list)
+      (should (coding-system-p cs))))
+  (let ((highest (coding-system-priority-list t)))
+    (should (symbolp highest))
+    (should (coding-system-p highest))))
+
+(ert-deftest coding-tests-coding-system-aliases ()
+  (let ((aliases (coding-system-aliases 'utf-8)))
+    (should (listp aliases))
+    (should (memq 'utf-8 aliases))))
+
+(ert-deftest coding-tests-coding-system-plist ()
+  (let ((plist (coding-system-plist 'utf-8)))
+    (should (listp plist))
+    (should (plist-member plist :mnemonic))))
+
+(ert-deftest coding-tests-coding-system-put ()
+  (let* ((cs 'utf-8)
+         (mnemonic (plist-get (coding-system-plist cs) :mnemonic)))
+    (coding-system-put cs :mnemonic mnemonic)
+    (should (eq (plist-get (coding-system-plist cs) :mnemonic) mnemonic))))
+
+(ert-deftest coding-tests-coding-system-eol-type ()
+  (let ((eol (coding-system-eol-type 'utf-8-unix)))
+    (should (integerp eol))
+    (should (memq eol '(0 1 2)))))
+
 
 (ert-deftest coding-check-coding-systems-region ()
   (should (equal (check-coding-systems-region "aå" nil '(utf-8))
