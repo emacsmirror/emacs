@@ -1058,6 +1058,33 @@ sufficiently large to avoid truncation."
     (goto-char (point-max))
     (should (= (following-char) 0))))
 
+(ert-deftest editfns-tests--buffer-substring-properties ()
+  (with-temp-buffer
+    (insert "abc")
+    (add-text-properties (point-min) (point-max) '(foo bar))
+    (let ((with-props (buffer-substring (point-min) (point-max)))
+          (without-props (buffer-substring-no-properties
+                          (point-min) (point-max))))
+      (should (equal with-props "abc"))
+      (should (equal without-props "abc"))
+      (should (eq (get-text-property 0 'foo with-props) 'bar))
+      (should-not (get-text-property 0 'foo without-props)))))
+
+(ert-deftest editfns-tests--insert-and-inherit ()
+  (with-temp-buffer
+    (insert "a")
+    (add-text-properties 1 2 '(foo bar))
+    (goto-char (point-max))
+    (insert "b")
+    (should-not (get-text-property 2 'foo))
+    (erase-buffer))
+  (with-temp-buffer
+    (insert "a")
+    (add-text-properties 1 2 '(foo bar))
+    (goto-char (point-max))
+    (insert-and-inherit "b")
+    (should (eq (get-text-property 2 'foo) 'bar))))
+
 (ert-deftest editfns-tests--line-beginning-end-position ()
   (with-temp-buffer
     (insert "aa\nbb\ncc")

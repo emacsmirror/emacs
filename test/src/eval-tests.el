@@ -374,6 +374,22 @@ expressions works for identifiers starting with period."
             (error err))))
     (should (eq inner-error outer-error))))
 
+(ert-deftest eval-tests--condition-case-basic ()
+  (should (equal (condition-case err
+                     42
+                   (error (list 'err err)))
+                 42))
+  (should (equal (condition-case err
+                     (signal 'wrong-type-argument '(integerp "x"))
+                   (wrong-type-argument (list 'wt err))
+                   (error (list 'err err)))
+                 '(wt (wrong-type-argument integerp "x"))))
+  (should (equal (condition-case err
+                     (signal 'error '("boom"))
+                   (wrong-type-argument (list 'wt err))
+                   (error (list 'err err)))
+                 '(err (error "boom")))))
+
 (ert-deftest eval-bad-specbind ()
   (should-error (eval '(let (((a b) 23)) (+ 1 2)) t)
                 :type 'wrong-type-argument)

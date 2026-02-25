@@ -124,4 +124,22 @@
       (should (= (marker-position maxm) 3))
       (should (eq (marker-buffer minm) (current-buffer))))))
 
+(ert-deftest marker-tests--move-marker-between-buffers ()
+  (let ((buf-1 (generate-new-buffer " *marker-tests-1*"))
+        (buf-2 (generate-new-buffer " *marker-tests-2*")))
+    (unwind-protect
+        (let ((m (make-marker)))
+          (with-current-buffer buf-1
+            (insert "abc")
+            (set-marker m 2 (current-buffer)))
+          (should (eq (marker-buffer m) buf-1))
+          (should (= (marker-position m) 2))
+          (with-current-buffer buf-2
+            (insert "xyz")
+            (set-marker m 1 (current-buffer)))
+          (should (eq (marker-buffer m) buf-2))
+          (should (= (marker-position m) 1)))
+      (kill-buffer buf-1)
+      (kill-buffer buf-2))))
+
 ;;; marker-tests.el ends here

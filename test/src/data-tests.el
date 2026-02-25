@@ -815,6 +815,13 @@ comparing the subr with a much slower Lisp implementation."
     (should (= (lognot n) (- -1 n)))
     (should (= (lognot m) (- -1 m)))))
 
+(ert-deftest data-tests-bignum-bit-identities ()
+  (let ((n (1+ most-positive-fixnum)))
+    (should (bignump n))
+    (should (= (logand n (lognot n)) 0))
+    (should (= (logior n (lognot n)) -1))
+    (should (= (logxor n n) 0))))
+
 (ert-deftest data-tests-logior ()
   (should (= -1 (logior -1) (logior -1 -1)))
   (should (= -1 (logior most-positive-fixnum most-negative-fixnum))))
