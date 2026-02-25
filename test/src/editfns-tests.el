@@ -970,7 +970,8 @@ sufficiently large to avoid truncation."
     (should (equal (buffer-string) "AAA")))
   (with-temp-buffer
     (insert-byte 200 1)
-    (should (= (aref (buffer-string) 0) 200)))
+    (should (= (aref (buffer-string) 0)
+               (unibyte-char-to-multibyte 200))))
   (should-error (with-temp-buffer (insert-byte 256 1))))
 
 (ert-deftest editfns-tests--insert-buffer-substring ()
