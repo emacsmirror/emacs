@@ -132,6 +132,101 @@
   "Number of args for `propertize' must be odd."
   (should-error (propertize "foo" 'bar) :type 'wrong-number-of-arguments))
 
+(ert-deftest editfns-tests--char-to-string-and-string-to-char ()
+  (should (equal (char-to-string ?A) "A"))
+  (should (= (string-to-char "A") ?A))
+  (should (= (string-to-char "") 0))
+  (should-error (char-to-string "A")))
+
+(ert-deftest editfns-tests--char-equal ()
+  (with-temp-buffer
+    (let ((case-fold-search nil))
+      (should (char-equal ?a ?a))
+      (should-not (char-equal ?a ?A))
+      (should-not (char-equal ?a ?b)))
+    (let ((case-fold-search t))
+      (should (char-equal ?a ?A))
+      (should (char-equal ?A ?a))
+      (should-not (char-equal ?a ?b)))))
+
+(ert-deftest editfns-tests--point-and-goto-char ()
+  (with-temp-buffer
+    (insert "abc")
+    (goto-char (point-min))
+    (should (= (point) (point-min)))
+    (should (= (goto-char 2) 2))
+    (should (= (point) 2))
+    (let ((m (point-marker)))
+      (should (= (marker-position m) 2))
+      (goto-char 3)
+      (should (= (point) 3)))))
+
+(ert-deftest editfns-tests--point-min-max-and-buffer-size ()
+  (with-temp-buffer
+    (insert "abc")
+    (should (= (point-min) 1))
+    (should (= (point-max) (1+ (buffer-size))))))
+
+(ert-deftest editfns-tests--region-beginning-end ()
+  (with-temp-buffer
+    (insert "abcd")
+    (goto-char 3)
+    (let ((mark-even-if-inactive t))
+      (set-mark 1)
+      (should (= (region-beginning) 1))
+      (should (= (region-end) 3))
+      (should (eq (marker-buffer (mark-marker)) (current-buffer)))
+      (should (= (marker-position (mark-marker)) 1)))))
+
+(ert-deftest editfns-tests--buffer-string-compare-substrings ()
+  (let ((buf1 (generate-new-buffer " *editfns-tests-cmp-1*"))
+        (buf2 (generate-new-buffer " *editfns-tests-cmp-2*")))
+    (unwind-protect
+        (progn
+          (with-current-buffer buf1
+            (insert "abc")
+            (should (equal (buffer-string) "abc")))
+          (with-current-buffer buf2
+            (insert "abd"))
+          (let ((case-fold-search nil))
+            (should (= (compare-buffer-substrings buf1 1 4 buf1 1 4) 0))
+            (should (= (compare-buffer-substrings buf1 1 4 buf2 1 4) -3))))
+      (when (buffer-live-p buf1)
+        (kill-buffer buf1))
+      (when (buffer-live-p buf2)
+        (kill-buffer buf2)))))
+
+(ert-deftest editfns-tests--gap-position-size ()
+  (with-temp-buffer
+    (insert "abc")
+    (goto-char 2)
+    (insert "Z")
+    (should (integerp (gap-position)))
+    (should (integerp (gap-size)))
+    (should (>= (gap-size) 0))
+    (should (<= (point-min) (gap-position) (point-max)))
+    (should (= (gap-position) (point)))))
+
+(ert-deftest editfns-tests--internal-labeled-narrow-widen ()
+  (with-temp-buffer
+    (insert "abcdef")
+    (internal--labeled-narrow-to-region 2 6 'label)
+    (should (equal (buffer-substring (point-min) (point-max)) "bcde"))
+    ;; Attempt to widen beyond labeled restriction should be clamped.
+    (narrow-to-region 1 7)
+    (should (equal (buffer-substring (point-min) (point-max)) "bcde"))
+    ;; Narrowing further within the labeled restriction is allowed.
+    (narrow-to-region 3 5)
+    (should (equal (buffer-substring (point-min) (point-max)) "cd"))
+    (internal--labeled-widen 'label)
+    (should (equal (buffer-substring (point-min) (point-max)) "abcdef"))))
+
+(ert-deftest editfns-tests--subst-char-in-region ()
+  (with-temp-buffer
+    (insert "ababa")
+    (subst-char-in-region (point-min) (point-max) ?b ?x)
+    (should (equal (buffer-string) "axaxa"))))
+
 (ert-deftest editfns-tests--line-boundaries ()
   (with-temp-buffer
     (insert "ab\ncd\n")

@@ -25,6 +25,8 @@
 (require 'cl-lib)
 (require 'let-alist)
 
+(defvar buffer-tests--local-var :default)
+
 (defun overlay-tests-start-recording-modification-hooks (overlay)
   "Start recording modification hooks on OVERLAY.
 
@@ -305,6 +307,39 @@ with parameters from the *Messages* buffer modification."
         (kill-buffer b1))
       (when (buffer-live-p b2)
         (kill-buffer b2)))))
+
+(ert-deftest buffer-tests--buffer-last-name ()
+  (let ((buf (generate-new-buffer " *buffer-tests-last-name*")))
+    (unwind-protect
+        (with-current-buffer buf
+          (let ((first (buffer-name)))
+            (rename-buffer " *buffer-tests-last-name-2*" t)
+            (should (equal (buffer-last-name) first))
+            (rename-buffer " *buffer-tests-last-name-3*" t)
+            (should (equal (buffer-last-name) " *buffer-tests-last-name-2*"))))
+      (when (buffer-live-p buf)
+        (kill-buffer buf)))))
+
+(ert-deftest buffer-tests--buffer-local-value ()
+  (let ((buf1 (generate-new-buffer " *buffer-tests-local-1*"))
+        (buf2 (generate-new-buffer " *buffer-tests-local-2*"))
+        (old buffer-tests--local-var))
+    (unwind-protect
+        (progn
+          (setq buffer-tests--local-var :default)
+          (with-current-buffer buf1
+            (setq-local buffer-tests--local-var :buf1))
+          (with-current-buffer buf2
+            (setq-local buffer-tests--local-var :buf2))
+          (should (eq (buffer-local-value 'buffer-tests--local-var buf1) :buf1))
+          (should (eq (buffer-local-value 'buffer-tests--local-var buf2) :buf2))
+          (should (eq (buffer-local-value 'buffer-tests--local-var (current-buffer))
+                      :default)))
+      (setq buffer-tests--local-var old)
+      (when (buffer-live-p buf1)
+        (kill-buffer buf1))
+      (when (buffer-live-p buf2)
+        (kill-buffer buf2)))))
 
 (ert-deftest buffer-tests--overlays-indirect-bug58928 ()
   (with-temp-buffer

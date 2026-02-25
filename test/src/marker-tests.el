@@ -90,6 +90,15 @@
     (should-not (marker-buffer m))
     (should-not (marker-position m))))
 
+(ert-deftest marker-tests--marker-buffer ()
+  (with-temp-buffer
+    (let ((m (make-marker)))
+      (should-not (marker-buffer m))
+      (set-marker m (point) (current-buffer))
+      (should (eq (marker-buffer m) (current-buffer)))
+      (set-marker m nil)
+      (should-not (marker-buffer m)))))
+
 (ert-deftest marker-tests--last-position-after-kill ()
   (let (marker pos)
     (with-temp-buffer
