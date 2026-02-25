@@ -802,6 +802,19 @@ comparing the subr with a much slower Lisp implementation."
 (ert-deftest data-tests-logcount-2 ()
   (should (= (logcount (read "#xffffffffffffffffffffffffffffffff")) 128)))
 
+(ert-deftest data-tests-logcount-negative-bignum ()
+  (let ((n (- (ash 1 200))))
+    (should (bignump n))
+    (should (= (logcount n) (logcount (lognot n))))))
+
+(ert-deftest data-tests-lognot-bignum ()
+  (let ((n (ash 1 200))
+        (m (- (ash 1 180))))
+    (should (bignump n))
+    (should (bignump m))
+    (should (= (lognot n) (- -1 n)))
+    (should (= (lognot m) (- -1 m)))))
+
 (ert-deftest data-tests-logior ()
   (should (= -1 (logior -1) (logior -1 -1)))
   (should (= -1 (logior most-positive-fixnum most-negative-fixnum))))

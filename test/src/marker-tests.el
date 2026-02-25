@@ -80,4 +80,48 @@
     (should-not (marker-position marker))
     (should (= (marker-last-position marker) pos))))
 
+(ert-deftest marker-tests--copy-marker ()
+  (with-temp-buffer
+    (insert "abc")
+    (goto-char 2)
+    (let ((m1 (point-marker))
+          (m2 (copy-marker (point) t))
+          (m3 (copy-marker (point) nil))
+          (m4 (copy-marker 1)))
+      (should (equal m1 m2))
+      (should (eq (marker-buffer m1) (marker-buffer m2)))
+      (should (marker-insertion-type m2))
+      (should-not (marker-insertion-type m3))
+      (should (eq (marker-buffer m4) (current-buffer)))
+      (should (= (marker-position m4) 1)))))
+
+(ert-deftest marker-tests--set-marker-and-move-marker ()
+  (let ((m (make-marker))
+        (m2 (make-marker)))
+    (with-temp-buffer
+      (insert "abc")
+      (should (eq (set-marker m 2 (current-buffer)) m))
+      (should (eq (marker-buffer m) (current-buffer)))
+      (should (= (marker-position m) 2))
+      (should (eq (move-marker m 1 (current-buffer)) m))
+      (should (= (marker-position m) 1))
+      (set-marker m2 nil)
+      (set-marker m m2)
+      (should-not (marker-buffer m))
+      (should-not (marker-position m))
+      (set-marker m 1 (current-buffer))
+      (set-marker m nil)
+      (should-not (marker-buffer m))
+      (should-not (marker-position m)))))
+
+(ert-deftest marker-tests--point-min-max-marker-narrowing ()
+  (with-temp-buffer
+    (insert "abcd")
+    (narrow-to-region 2 3)
+    (let ((minm (point-min-marker))
+          (maxm (point-max-marker)))
+      (should (= (marker-position minm) 2))
+      (should (= (marker-position maxm) 3))
+      (should (eq (marker-buffer minm) (current-buffer))))))
+
 ;;; marker-tests.el ends here
