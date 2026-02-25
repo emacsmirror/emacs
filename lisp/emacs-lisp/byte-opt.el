@@ -2421,36 +2421,29 @@ If FOR-EFFECT is non-nil, the return value is assumed to be of no importance."
 		     (setcar lap1 'byte-goto)))
               (setq keep-going t))
 	     ;;
-	     ;; varref-X varref-X  -->  varref-X dup
-	     ;; varref-X [dup ...] varref-X  -->  varref-X [dup ...] dup
-	     ;; stackref-X [dup ...] stackref-X+N --> stackref-X [dup ...] dup
+	     ;; stack-ref(X) dup^N stack-ref(X+N+1) -> stack-ref(X) dup^(N+1)
 	     ;; We don't optimize the const-X variations on this here,
 	     ;; because that would inhibit some goto optimizations; we
 	     ;; optimize the const-X case after all other optimizations.
 	     ;;
-	     ((and (memq (car lap0) '(byte-varref byte-stack-ref))
-                   (let ((tmp (cdr rest))
-                         (tmp2 0))
-		     (while (eq (car (car tmp)) 'byte-dup)
-		       (setq tmp2 (1+ tmp2))
-                       (setq tmp (cdr tmp)))
-		     (and (eq (if (eq 'byte-stack-ref (car lap0))
-                                  (+ tmp2 1 (cdr lap0))
-                                (cdr lap0))
-                              (cdr (car tmp)))
-	                  (eq (car lap0) (car (car tmp)))
+	     ((and (eq (car lap0) 'byte-stack-ref)
+                   (let ((dups 0)
+                         (lapn (cdr rest)))
+		     (while (eq (car (car lapn)) 'byte-dup)
+		       (setq dups (1+ dups))
+                       (setq lapn (cdr lapn)))
+		     (and (eq (car (car lapn)) 'byte-stack-ref)
+	                  (eq (cdr (car lapn)) (+ dups 1 (cdr lap0)))
                           (progn
 	                    (when (memq byte-optimize-log '(t byte))
-	                      (let ((str "")
-		                    (tmp2 (cdr rest)))
-	                        (while (not (eq tmp tmp2))
-		                  (setq tmp2 (cdr tmp2))
-                                  (setq str (concat str " dup")))
-	                        (byte-compile-log-lap "  %s%s %s\t-->\t%s%s dup"
-				                      lap0 str lap0 lap0 str)))
+	                      (let ((dup-str
+                                     (string-join (make-list dups " dup"))))
+	                        (byte-compile-log-lap
+                                 "  %s%s %s\t-->\t%s%s dup"
+				 lap0 dup-str (car lapn) lap0 dup-str)))
 	                    (setq keep-going t)
-	                    (setcar (car tmp) 'byte-dup)
-	                    (setcdr (car tmp) 0)
+	                    (setcar (car lapn) 'byte-dup)
+	                    (setcdr (car lapn) 0)
                             t)))))
 	     ;;
 	     ;; TAG1: TAG2: --> <deleted> TAG2:
