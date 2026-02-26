@@ -90,7 +90,7 @@ non-whitespace characters of the current line."
   (save-excursion
     (forward-line -1)
     (back-to-indentation)
-    (when (looking-at c-ts-common--comment-start-skip)
+    (when (looking-at c-ts-common-comment-start-skip)
       (goto-char (match-end 0))
       (if (looking-at (rx (* (or " " "\t")) eol))
           ;; Only /* at the first line.
@@ -274,11 +274,11 @@ This function should be called at BOL.  Used by
    ;; `adaptive-fill-first-line-regexp' decide.
    (t nil)))
 
-(defvar c-ts-common--comment-start-skip
+(defvar c-ts-common-comment-start-skip
   (rx (or (seq "/" (+ "/"))
           (seq "/" (+ "*")))
       (* (syntax whitespace)))
-  "`comment-start-skip' value for C and C++ tree-sitter modes.")
+  "The `comment-start-skip' used by `c-ts-common-comment-setup'.")
 
 (defun c-ts-common-comment-setup ()
   "Set up local variables for C-like comment.
@@ -297,7 +297,7 @@ Set up:
  - `comment-multi-line'"
   (setq-local comment-start "// ")
   (setq-local comment-end "")
-  (setq-local comment-start-skip c-ts-common--comment-start-skip)
+  (setq-local comment-start-skip c-ts-common-comment-start-skip)
   (setq-local comment-end-skip
               (rx (* (syntax whitespace))
                   (group (or (syntax comment-end)
