@@ -533,12 +533,16 @@ expressions works for identifiers starting with period."
     (should (listp frames))
     (should found)))
 
+(defvar eval-tests--backtrace-eval-dyn)
+(defun eval-tests--backtrace-eval-helper ()
+  (backtrace-eval 'eval-tests--backtrace-eval-dyn 1 'backtrace-eval))
+
 (ert-deftest eval-tests--backtrace-eval ()
-  (let ((eval-tests--backtrace-eval-lex 42))
-    (ignore eval-tests--backtrace-eval-lex)
-    (should (= (backtrace-eval 'eval-tests--backtrace-eval-lex
-                               1 'backtrace-eval)
-               42))))
+  (let ((eval-tests--backtrace-eval-dyn 42))
+    ;; Ensure the binding is established before the target frame.
+    ;; backtrace-eval temporarily unrewinds the specpdl to the frame it
+    ;; evaluates in, which would otherwise undo this binding.
+    (should (= (eval-tests--backtrace-eval-helper) 42))))
 
 (defvar eval-tests--backtrace-locals-dyn)
 (defun eval-tests--backtrace-locals-helper ()
