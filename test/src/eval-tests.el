@@ -533,10 +533,10 @@ expressions works for identifiers starting with period."
     (should (listp frames))
     (should found)))
 
-(defvar eval-tests--backtrace-eval-dyn)
 (ert-deftest eval-tests--backtrace-eval ()
-  (let ((eval-tests--backtrace-eval-dyn 42))
-    (should (= (backtrace-eval 'eval-tests--backtrace-eval-dyn
+  (let ((eval-tests--backtrace-eval-lex 42))
+    (ignore eval-tests--backtrace-eval-lex)
+    (should (= (backtrace-eval 'eval-tests--backtrace-eval-lex
                                1 'backtrace-eval)
                42))))
 
