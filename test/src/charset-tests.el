@@ -76,6 +76,76 @@
       (dolist (cs charsets)
         (should (charsetp cs))))))
 
+(ert-deftest charset-tests--map-charset-chars ()
+  (let (chars)
+    (map-charset-chars (lambda (range _arg)
+                         (setq chars (append chars
+                                             (number-sequence
+                                              (car range) (cdr range)))))
+                       'ascii nil 65 67)
+    (setq chars (sort (delete-dups chars) #'<))
+    (should (equal chars '(65 66 67)))))
+
+(ert-deftest charset-tests--define-charset-internal-errors ()
+  (should-error (define-charset-internal)))
+
+(defvar charset-tests--internal-counter 0)
+
+(ert-deftest charset-tests--define-charset-alias ()
+  (let ((alias (intern (format "charset-tests--alias-%d"
+                               (setq charset-tests--internal-counter
+                                     (1+ charset-tests--internal-counter))))))
+    (define-charset-alias alias 'ascii)
+    (should (charsetp alias))))
+
+(ert-deftest charset-tests--set-charset-plist ()
+  (let ((orig (charset-plist 'ascii)))
+    (unwind-protect
+        (progn
+          (set-charset-plist 'ascii '(:charset-tests t))
+          (should (equal (charset-plist 'ascii) '(:charset-tests t))))
+      (set-charset-plist 'ascii orig))))
+
+(ert-deftest charset-tests--unify-charset-error ()
+  (should-error (unify-charset 'ascii)))
+
+(ert-deftest charset-tests--get-unused-iso-final-char ()
+  (let ((val (get-unused-iso-final-char 1 94)))
+    (when val
+      (should (<= ?0 val))
+      (should (<= val ??)))))
+
+(ert-deftest charset-tests--declare-equiv-charset ()
+  (should-not (declare-equiv-charset 1 94 ?B 'ascii))
+  (should (eq (iso-charset 1 94 ?B) 'ascii)))
+
+(ert-deftest charset-tests--split-char ()
+  (let ((parts (split-char ?A)))
+    (should (eq (car parts) 'ascii))
+    (should (equal (cdr parts) '(65)))))
+
+(ert-deftest charset-tests--iso-charset ()
+  (should (eq (iso-charset 1 94 ?B) 'ascii)))
+
+(ert-deftest charset-tests--clear-charset-maps ()
+  (should-not (clear-charset-maps)))
+
+(ert-deftest charset-tests--set-charset-priority ()
+  (let ((orig (charset-priority-list)))
+    (unwind-protect
+        (progn
+          (set-charset-priority 'unicode)
+          (should (eq (charset-priority-list t) 'unicode)))
+      (apply #'set-charset-priority orig))))
+
+(ert-deftest charset-tests--sort-charsets ()
+  (let* ((priority (charset-priority-list))
+         (a (car priority))
+         (b (cadr priority)))
+    (skip-unless (and a b))
+    (let ((sorted (sort-charsets (list b a))))
+      (should (equal sorted (list a b))))))
+
 (provide 'charset-tests)
 
 ;;; charset-tests.el ends here
