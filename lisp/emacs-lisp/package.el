@@ -4825,8 +4825,9 @@ DESC must be a `package-desc' object."
              browse-url-browser-function)))
       (browse-url url))))
 
-(declare-function ietf-drums-parse-address "ietf-drums"
-                  (string &optional decode))
+(declare-function ietf-drums-parse-addresses "ietf-drums" (string &optional rawp))
+(declare-function ietf-drums-make-address "ietf-drums" (name address))
+(declare-function mail-position-on-field "sendmail" (field &optional soft))
 
 (defun package-maintainers (pkg-desc &optional no-error)
   "Return an email address for the maintainers of PKG-DESC.
@@ -4838,38 +4839,68 @@ will be signaled in that case."
     (error "Invalid package description: %S" pkg-desc))
   (let* ((name (package-desc-name pkg-desc))
          (extras (package-desc-extras pkg-desc))
-         (maint (alist-get :maintainer extras)))
-    (unless (listp (cdr maint))
-      (setq maint (list maint)))
+         (maint (ensure-list
+                 (or (and-let* ((list (cdr (assoc :maintainer extras))))
+                       (if (consp (cdr list)) list (list list)))
+                     (cdr (assoc :maintainers extras))
+                     ;; If no maintainers are listed, contact authors
+                     ;; instead (bug#80478)
+                     (cdr (assoc :authors extras))))))
     (cond
      ((and (null maint) (null no-error))
       (user-error "Package `%s' has no explicit maintainer" name))
-     ((and (not (progn
-                  (require 'ietf-drums)
-                  (ietf-drums-parse-address (cdar maint))))
+     ((and (consp (car maint)) (stringp (cdar maint))
+           (not (any #'car maint))
            (null no-error))
       (user-error "Package `%s' has no maintainer address" name))
      (t
-      (with-temp-buffer
-        (mapc #'package--print-email-button maint)
-        (replace-regexp-in-string
-         "\n" ", " (string-trim
-                    (buffer-substring-no-properties
-                     (point-min) (point-max)))))))))
+      (require 'ietf-drums)
+      (mapconcat (lambda (e)
+                   (ietf-drums-make-address (car e) (cdr e)))
+                 maint ", ")))))
 
 ;;;###autoload
 (defun package-report-bug (desc)
   "Prepare a message to send to the maintainers of a package.
 DESC must be a `package-desc' object."
   (interactive (list (package--query-desc package-alist)))
-  (let ((maint (package-maintainers desc))
-        (name (symbol-name (package-desc-name desc)))
-        (pkgdir (package-desc-dir desc))
-        vars)
+  (let* ((maint (package-maintainers desc 'no-error))
+         (pkgdir (package-desc-dir desc))
+         (main-maint (if (eq pkgdir 'builtin)
+                         "bug-gnu-emacs@gnu.org"
+                       "UNKNOWN-PACKAGE-MAINTAINER"))
+         (hook (let* ((addr (and maint (ietf-drums-parse-addresses maint)))
+                      (devel (cl-find "emacs-devel@gnu.org" addr
+                                      :test #'string-equal-ignore-case
+                                      :key #'car)))
+                 (lambda ()
+                   (and-let* ((main (or devel (car addr)))
+                              (others (prog1 (if (not devel)
+                                                 (cdr addr)
+                                               ;; We want to have bug reports for
+                                               ;; Emacs packages sent to the bug
+                                               ;; tracker, and not the emacs-devel.
+                                               (setcar devel "bug-gnu-emacs@gnu.org")
+                                               (delq devel addr))
+                                        (setq main-maint (car main)))))
+
+                     (save-excursion
+                       (mail-position-on-field (if devel "X-Debbugs-CC" "CC"))
+                       (insert
+                        (mapconcat (lambda (e)
+                                     (ietf-drums-make-address (cdr e) (car e)))
+                                   others ", "))))
+                   (when devel
+                     (save-excursion
+                       ;; Ensure an empty X-Debbugs-CC header if
+                       ;; addressing the Emacs developers.
+                       (mail-position-on-field "X-Debbugs-CC"))))))
+         (name (symbol-name (package-desc-name desc)))
+         vars)
     (when pkgdir
       (dolist-with-progress-reporter (group custom-current-group-alist)
           "Scanning for modified user options..."
-        (when (and (car group)
+        (when (and (car group) (not (eq pkgdir 'builtin))
                    (file-in-directory-p (car group) pkgdir))
           (dolist (ent (get (cdr group) 'custom-group))
             (when (and (custom-variable-p (car ent))
@@ -4878,7 +4909,7 @@ DESC must be a `package-desc' object."
                                 (default-toplevel-value (car ent)))))
               (push (car ent) vars))))))
     (dlet ((reporter-prompt-for-summary-p t))
-      (reporter-submit-bug-report maint name vars))))
+      (reporter-submit-bug-report main-maint name vars hook))))
 
 ;;;; Introspection
 
