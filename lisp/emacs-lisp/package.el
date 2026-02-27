@@ -2505,8 +2505,8 @@ intended for testing Emacs and/or the packages in a clean environment."
              current-prefix-arg)))
   (let* ((name (concat "package-isolate-"
                        (mapconcat #'package-desc-full-name packages ",")))
-         (all-packages (package-compute-transaction
-                        packages (mapcan #'package-desc-reqs packages)))
+         (dependencies (apply #'append (mapcar #'package-desc-reqs packages)))
+         (all-packages (package-compute-transaction packages dependencies))
          (package-alist (copy-tree package-alist t))
          (temp-install-dir nil) initial-scratch-message load-list)
     (when-let* ((missing (seq-remove #'package-installed-p all-packages))
