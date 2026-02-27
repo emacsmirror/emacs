@@ -4802,7 +4802,7 @@ The optional argument ALIST must consist of elements with the
 form (PKG-NAME PKG-DESC).  If not specified, it will default to
 `package-alist'."
   (or (tabulated-list-get-id)
-      (let ((alist (or alist package-alist)))
+      (let ((alist (or alist (package--alist))))
         (cadr (assoc (completing-read "Package: " alist nil t)
                      alist #'string=)))))
 
@@ -4863,7 +4863,7 @@ will be signaled in that case."
 (defun package-report-bug (desc)
   "Prepare a message to send to the maintainers of a package.
 DESC must be a `package-desc' object."
-  (interactive (list (package--query-desc package-alist)))
+  (interactive (list (package--query-desc)))
   (let* ((maint (package-maintainers desc 'no-error))
          (pkgdir (package-desc-dir desc))
          (main-maint (if (eq pkgdir 'builtin)
