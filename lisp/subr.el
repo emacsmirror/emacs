@@ -6222,7 +6222,10 @@ consisting of STR followed by an invisible left-to-right mark
   "Return non-nil if STRING1 is greater than STRING2 in lexicographic order.
 Case is significant.
 Symbols are also allowed; their print names are used instead."
-  (declare (pure t) (side-effect-free t))
+  (declare (compiler-macro (lambda (_)
+                             (let ((arg1 (make-symbol "arg1")))
+                               `(let ((,arg1 ,string1))
+                                  (string-lessp ,string2 ,arg1))))))
   (string-lessp string2 string1))
 
 
