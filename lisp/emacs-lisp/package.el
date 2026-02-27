@@ -2546,7 +2546,7 @@ intended for testing Emacs and/or the packages in a clean environment."
                                        temp-install-dir
                                        package-directory-list))
                             (setq package-load-list ',package-load-list)
-                            (package-activate-all)))))))
+                            (package--activate-all)))))))
 
 
 ;;;; Package description buffer.
