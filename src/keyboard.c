@@ -3769,6 +3769,9 @@ kbd_buffer_store_buffered_event (union buffered_input_event *event,
 	{
 	  KBOARD *kb = FRAME_KBOARD (XFRAME (event->ie.frame_or_window));
 
+	  /* If C-g arrives while we're in the run state on behalf of
+	     another display, just clear the queue and deposit the C-g
+	     to be read later.  */
 	  if (single_kboard && kb != current_kboard)
 	    {
 	      kset_kbd_queue
