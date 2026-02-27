@@ -1206,7 +1206,6 @@ See Info node `(elisp) Integer Basics'."
 (put 'eq  'byte-optimizer #'byte-optimize-eq)
 (put 'eql   'byte-optimizer #'byte-optimize-equal)
 (put 'equal 'byte-optimizer #'byte-optimize-equal)
-(put 'string= 'byte-optimizer #'byte-optimize-binary-predicate)
 (put 'string-equal 'byte-optimizer #'byte-optimize-binary-predicate)
 
 (put '=  'byte-optimizer #'byte-opt--nary-comparison)
@@ -1216,7 +1215,6 @@ See Info node `(elisp) Integer Basics'."
 (put '>= 'byte-optimizer #'byte-opt--nary-comparison)
 
 (put 'string-greaterp 'byte-optimizer #'byte-optimize-string-greaterp)
-(put 'string> 'byte-optimizer #'byte-optimize-string-greaterp)
 
 (put 'concat 'byte-optimizer #'byte-optimize-concat)
 
@@ -1408,7 +1406,7 @@ See Info node `(elisp) Integer Basics'."
         condition
       form)))
 
-(defun byte-optimize-not (form)
+(defun byte-optimize-null (form)
   (if (= (length form) 2)
       (let ((arg (nth 1 form)))
         (cond ((null arg) t)
@@ -1423,8 +1421,7 @@ See Info node `(elisp) Integer Basics'."
 (put 'cond  'byte-optimizer #'byte-optimize-cond)
 (put 'if    'byte-optimizer #'byte-optimize-if)
 (put 'while 'byte-optimizer #'byte-optimize-while)
-(put 'not   'byte-optimizer #'byte-optimize-not)
-(put 'null  'byte-optimizer #'byte-optimize-not)
+(put 'null  'byte-optimizer #'byte-optimize-null)
 
 (defun byte-optimize-funcall (form)
   ;; (funcall #'(lambda ...) ...) -> (let ...)
@@ -1875,7 +1872,7 @@ See Info node `(elisp) Integer Basics'."
          natnump nlistp null
          number-or-marker-p numberp recordp remove-pos-from-symbol
          sequencep stringp subrp symbol-with-pos-p symbolp
-         threadp type-of user-ptrp vector-or-char-table-p vectorp wholenump
+         threadp type-of user-ptrp vector-or-char-table-p vectorp
          ;; editfns.c
          bobp bolp buffer-size buffer-string current-message emacs-pid
          eobp eolp following-char gap-position gap-size group-gid
