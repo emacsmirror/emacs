@@ -2358,7 +2358,9 @@ unless OK-IF-ALREADY-EXISTS is non-nil."
     (dired-handle-overwrite newname)
     (dired-maybe-create-dirs (file-name-directory newname))
     (if (and dired-vc-rename-file
-             (vc-backend file)
+             (if file-is-dir-p
+                 (ignore-errors (vc-responsible-backend file))
+               (vc-backend file))
              (ignore-errors (vc-responsible-backend newname)))
         (vc-rename-file file newname)
       ;; error is caught in -create-files
