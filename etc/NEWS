@@ -673,11 +673,6 @@ will change its appearance if the tab buffer has been modified.
 This user option controls which buffers should appear in the tab line.
 By default, this is set to not filter the buffers.
 
-*** New user option 'package-upgrade-keep-previous'.
-This user option controls whether to keep previous packages versions
-on upgrade.  By default, this is set to nil, to keep the previous
-behavior.
-
 ** Project
 
 ---
@@ -3095,6 +3090,11 @@ those packages.  The default is to show a button on the mode line that
 can be used to install such packages, but you can customise the
 presentation style of these suggestions using
 'package-autosuggest-style'.
+
++++
+*** New user option 'package-retention-policy'.
+This user option controls what previous packages versions to keep on
+upgrade.  By default, this is set to nil, to keep the previous behavior.
 
 ** Rcirc
 

@@ -427,9 +427,28 @@ synchronously."
   :type 'natnum
   :version "28.1")
 
-(defcustom package-upgrade-keep-previous nil
-  "If non-nil, keep previous packages versions on upgrade."
-  :type 'boolean
+(defconst package--policy-type
+  (let ((choice '(choice :tag "Specific packages or archives"
+                         (cons :tag "Archive name" (const archive) string)
+                         (cons :tag "Package name" (const package) symbol))))
+    `(choice
+      (const :tag "All packages" t)
+      (repeat :tag "Match these specific packages and archives" ,choice)
+      (cons :tag "Match packages and archives except these"
+            (const not) (repeat ,choice)))))
+
+(defcustom package-retention-policy nil
+  "Policy for retaining old package installations after upgrades.
+By default Emacs will activate the newest package, unless otherwise
+specified using `package-load-list'.  If this user option is set to t,
+then no old packages are deleted.  This might be useful if you wish to
+revert an upgrade.  By setting this user option to a list you can also
+selectively list what packages and archives to retain.  For the former,
+an entry of the form (archive STRING) will retain all packages from the
+archive STRING (see `package-archives'), and an entry of the
+form (package SYMBOL) will retain packages whose names match SYMBOL.  If
+you prefix the list with a symbol `not', the rules are inverted."
+  :type package--policy-type
   :version "31.1")
 
 
@@ -683,15 +702,7 @@ form (archive STRING) will review all packages from the archive
 STRING (see `package-archives'), and an entry of the form (package
 SYMBOL) will review packages whose names match SYMBOL.  If you prefix
 the list with a symbol `not', the rules are inverted."
-  :type
-  (let ((choice '(choice :tag "Review specific packages or archives"
-                         (cons :tag "Archive name" (const archive) string)
-                         (cons :tag "Package name" (const package) symbol))))
-    `(choice
-      (const :tag "Review all packages" t)
-      (repeat :tag "Review these specific packages and archives" ,choice)
-      (cons :tag "Review packages and archives except these"
-            (const not) (repeat ,choice))))
+  :type package--policy-type
   :risky t
   :version "31.1")
 
@@ -729,13 +740,10 @@ if the user selects a diff-related option during review."
                (repeat :tag "Diff command-line arguments" string))
   :version "31.1")
 
-(defun package--review-p (pkg-desc)
-  "Return non-nil if upgrading PKG-DESC requires a review.
-This function consults `package-review-policy' to determine if the user
-wants to review the package prior to installation.  See `package-review'."
+(defun package-matches-selector-p (selector pkg-desc)
   (let ((archive (package-desc-archive pkg-desc))
         (name (package-desc-name pkg-desc)))
-    (pcase-exhaustive package-review-policy
+    (pcase-exhaustive selector
       ((and (pred listp) list)
        (xor (any (lambda (ent)
                    (pcase ent
@@ -747,6 +755,11 @@ wants to review the package prior to installation.  See `package-review'."
             (eq (car list) 'not)))
       ('t t))))
 
+(defun package--review-p (pkg-desc)
+  "Return non-nil if upgrading PKG-DESC requires a review.
+This function consults `package-review-policy' to determine if the user
+wants to review the package prior to installation.  See `package-review'."
+  (package-matches-selector-p package-review-policy pkg-desc))
 
 (declare-function mail-text "sendmail" ())
 (declare-function message-goto-body "message" (&optional interactive))
@@ -2087,7 +2100,9 @@ NAME should be a symbol."
                          ;; An active built-in has never been "selected"
                          ;; before.  Mark it as installed explicitly.
                          (and pkg-desc 'dont-select))
-        (when (and (not package-upgrade-keep-previous) pkg-desc)
+        (when (and pkg-desc (not (package-matches-selector-p
+                                  package-retention-policy
+                                  pkg-desc)))
           (package-delete pkg-desc 'force 'dont-unselect))))))
 
 (defun package--upgradeable-packages (&optional include-builtins)
@@ -3885,7 +3900,9 @@ Implementation of `package-menu-mark-upgrades'."
                   ((equal pkg-desc upgrade)
                    (package-menu-mark-install))
                   (t
-                   (when (not package-upgrade-keep-previous)
+                   (unless (package-matches-selector-p
+                            package-retention-policy
+                            pkg-desc)
                      (package-menu-mark-delete)))))))
       (message "Packages marked for upgrading: %d"
                (length upgrades)))))
