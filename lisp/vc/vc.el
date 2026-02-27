@@ -3463,7 +3463,8 @@ When called from Lisp, optional argument FILESET overrides the fileset."
          (backend (car fileset)))
     (vc-print-log-internal backend (cadr fileset) nil nil
                            (vc--outgoing-base-mergebase backend
-                                                        upstream-location))))
+                                                        upstream-location)
+                           'log-outstanding)))
 
 ;;;###autoload
 (defun vc-root-log-outstanding (&optional upstream-location)
@@ -4182,13 +4183,14 @@ LIMIT can also be a string, which means the revision before which to stop."
   "Set this to record the type of VC log shown in the current buffer.
 Supported values are:
 
-  `short'        -- short log form, one line for each commit
-  `long'         -- long log form, including full log message and author
-  `with-diff'    -- log including diffs
-  `log-outgoing' -- log of changes to be pushed to upstream
-  `log-incoming' -- log of changes to be brought by pulling from upstream
-  `log-search'   -- log entries matching a pattern; shown in long format
-  `mergebase'    -- log created by `vc-log-mergebase'.")
+  `short'           -- short log form, one line for each commit
+  `long'            -- long log form, including full log message and author
+  `with-diff'       -- log including diffs
+  `log-outgoing'    -- log of changes to be pushed to upstream
+  `log-incoming'    -- log of changes to be brought by pulling from upstream
+  `log-outstanding' -- log of changes you've not yet finished sharing
+  `log-search'      -- log entries matching a pattern; shown in long format
+  `mergebase'       -- log created by `vc-log-mergebase'.")
 (put 'vc-log-view-type 'permanent-local t)
 (defvar vc-sentinel-movepoint)
 
