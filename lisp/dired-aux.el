@@ -804,7 +804,7 @@ to execute it asynchronously.
 When operating on multiple files, asynchronous commands
 are executed in the background on each file in parallel.
 In shell syntax this means separating the individual commands
-with `&'.  However, when COMMAND ends in `;' or `;&' then commands
+with `&'.  However, when COMMAND ends in `;&' then commands
 are executed in the background on each file sequentially waiting
 for each command to terminate before running the next command.
 In shell syntax this means separating the individual commands with `;'.
