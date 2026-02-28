@@ -5280,7 +5280,7 @@ maybe_disable_address_randomization (int argc, char **argv)
 extern int emacs_exec_file (char const *, char *const *, char *const *);
 extern void init_standard_fds (void);
 extern char *emacs_get_current_dir_name (void);
-extern void stuff_char (char c);
+extern int stuff_char (char c);
 extern void init_foreground_group (void);
 extern void sys_subshell (void);
 extern void sys_suspend (void);

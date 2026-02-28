@@ -12421,19 +12421,15 @@ DEFUN ("suspend-emacs", Fsuspend_emacs, Ssuspend_emacs, 0, 1, "",
 If `cannot-suspend' is non-nil, or if the system doesn't support job
 control, run a subshell instead.
 
-If optional arg STUFFSTRING is non-nil, its characters are stuffed
-to be read as terminal input by Emacs's parent, after suspension.
+If optional arg STUFFSTRING is non-nil, stuff it and then a newline as
+keyboard input, if Emacs is running interactively on a terminal and the
+platform supports and allows stuffing; this may need special privileges.
 
 Before suspending, run the normal hook `suspend-hook'.
 After resumption run the normal hook `suspend-resume-hook'.
 
 Some operating systems cannot stop the Emacs process and resume it later.
-On such systems, Emacs starts a subshell instead of suspending.
-
-On some operating systems, stuffing characters into terminal input
-buffer requires special privileges or is not supported at all.
-On such systems, calling this function with non-nil STUFFSTRING might
-either signal an error or silently fail to stuff the characters.  */)
+On such systems, Emacs starts a subshell instead of suspending.  */)
   (Lisp_Object stuffstring)
 {
   specpdl_ref count = SPECPDL_INDEX ();
@@ -12472,38 +12468,34 @@ either signal an error or silently fail to stuff the characters.  */)
   return Qnil;
 }
 
-/* If STUFFSTRING is a string, stuff its contents as pending terminal input.
-   Then in any case stuff anything Emacs has read ahead and not used.  */
+/* If STUFFSTRING is a string, stuff its contents and then a newline as
+   pending terminal input.  Then stuff anything Emacs has read ahead and
+   not used.  However, do nothing if stuffing does not work.  */
 
 void
 stuff_buffered_input (Lisp_Object stuffstring)
 {
 #ifdef SIGTSTP  /* stuff_char is defined if SIGTSTP.  */
-  register unsigned char *p;
+  int bad_stuff = 0;
 
   if (STRINGP (stuffstring))
     {
-      register ptrdiff_t count;
-
-      p = SDATA (stuffstring);
-      count = SBYTES (stuffstring);
-      while (count-- > 0)
-	stuff_char (*p++);
-      stuff_char ('\n');
+      char *p = SSDATA (stuffstring);
+      for (ptrdiff_t i = SBYTES (stuffstring); !bad_stuff && 0 < i; i--)
+	bad_stuff = stuff_char (*p++);
+      if (!bad_stuff)
+	bad_stuff = stuff_char ('\n');
     }
 
-  /* Anything we have read ahead, put back for the shell to read.  */
-  /* ?? What should this do when we have multiple keyboards??
-     Should we ignore anything that was typed in at the "wrong" kboard?
-
-     rms: we should stuff everything back into the kboard
-     it came from.  */
+  /* Anything we have read ahead, put back for the shell to read.
+     When we have multiple keyboards, we should stuff everything back
+     into the keyboard it came from, but fixing this is low priority as
+     many systems prohibit stuffing for security reasons.  */
   for (; kbd_fetch_ptr != kbd_store_ptr;
        kbd_fetch_ptr = next_kbd_event (kbd_fetch_ptr))
     {
-
-      if (kbd_fetch_ptr->kind == ASCII_KEYSTROKE_EVENT)
-	stuff_char (kbd_fetch_ptr->ie.code);
+      if (kbd_fetch_ptr->kind == ASCII_KEYSTROKE_EVENT && !bad_stuff)
+	bad_stuff = stuff_char (kbd_fetch_ptr->ie.code);
 
       clear_event (&kbd_fetch_ptr->ie);
     }

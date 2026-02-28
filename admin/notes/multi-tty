@@ -504,6 +504,8 @@ THINGS TO DO
 ** flow-ctrl.el must be updated.
 
 ** Fix stuff_char for multi-tty.  Doesn't seem to be of high priority.
+   For security reasons stuff_char does not work by default on many
+   platforms, which makes such a fix even lower priority.
 
 DIARY OF CHANGES
 ----------------
