@@ -79,7 +79,7 @@
 (require 'cal-dst)
 (require 'simple)
 (require 'seq)
-(eval-when-compile '(require 'icalendar-macs))
+(eval-when-compile (require 'icalendar-macs))
 
 
 ;; Recurrence Intervals
