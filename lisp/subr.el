@@ -5089,20 +5089,6 @@ newlines."
                        shell-file-name delete buffer nil
                        shell-command-switch command))
 
-(defvar command-line-max-length
-  ;; Currently we use the same value everywhere.  If we actually use
-  ;; larger values on some systems at some point, then we need to make
-  ;; sure we handle whether the command will be run remotely via TRAMP.
-  ;; FIXME: This value is very small, it might easily all be used up by
-  ;; `process-environment'.  We really want a larger value on POSIX.
-  4096
-  "Maximum length of a command and its arguments on this system.
-This is measured in characters.
-Used by `multiple-command-partition-arguments'.  Other code calls that
-function for cases in which it's known to be safe to run the command
-multiple times on subsequent partitions of the list of arguments.
-(In a shell script, you might use the `xargs' utility.)")
-
 (defun multiple-command-partition-arguments (command arguments &optional shellp)
   "Partition ARGUMENTS of COMMAND to avoid command line length limits.
 This function is for running commands on each element of ARGUMENTS where
