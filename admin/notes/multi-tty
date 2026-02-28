@@ -411,6 +411,9 @@ THINGS TO DO
    resolved introducing a complex protocol to remotely bail out of
    single-kboard mode by pressing C-g.
 
+   Update (from spwhitton): We have instead added the new
+   'multiple-terminals-merge-keyboards' user option (bug#79892).
+
 ** The session management module is prone to crashes when the X
    connection is closed and then later I try to connect to a new X
    session:

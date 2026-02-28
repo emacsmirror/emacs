@@ -826,7 +826,7 @@ This function is called by the editor initialization to begin editing.  */)
      like it is done in the splash screen display, we have to
      make sure that we restore single_kboard as command_loop_1
      would have done if it were left normally.  */
-  if (command_loop_level > 0)
+  if (command_loop_level > 0 && !multiple_terminals_merge_keyboards)
     temporarily_switch_to_single_kboard (SELECTED_FRAME ());
 
   recursive_edit_1 ();
@@ -2374,10 +2374,10 @@ read_event_from_main_queue (struct timespec *end_time,
 				  && EQ (EVENT_HEAD_KIND (EVENT_HEAD (c)),
 					 Qmouse_click))))
 	    {
-	      AUTO_STRING (locked, "Frame is locked while another"
-			   " waits for input"
-			   " or is otherwise in a recursive edit");
-	      message3_frame (locked, frame);
+	      AUTO_STRING (locked, "Frame is locked; see"
+			   " `multiple-terminals-merge-keyboards'"
+			   " variable");
+	      message3_frame (Fformat_message (1, &locked), frame);
 	    }
 	  c = Qnil;
 	  goto start;
@@ -14447,6 +14447,41 @@ within `input-decode-map' or `local-function-key-map' when its bound
 function is called to remap that sequence.  */);
   Vcurrent_key_remap_sequence = Qnil;
   DEFSYM (Qcurrent_key_remap_sequence, "current-key-remap-sequence");
+
+  DEFVAR_BOOL ("multiple-terminals-merge-keyboards",
+	       multiple_terminals_merge_keyboards,
+    doc: /* If non-nil, treat different terminals' keyboards as less isolated.
+
+Each terminal displaying Emacs frames has an associated keyboard.
+Normally, Emacs assumes that these keyboards are physically
+distinct, so that someone could be typing on one keyboard and
+someone else typing on another, into different frames on different
+terminals.  In certain situations, however, Emacs enters
+single-keyboard mode, in which input from all but one keyboard is
+blocked.  This prevents keys typed on one keyboard from interfering
+with an operation started on another keyboard.  The main operation
+to which this applies is entering a recursive edit, which includes
+all minibuffer prompting.
+
+Single-keyboard mode can be inconvenient when there are distinct
+terminals and so distinct keyboards, but only one user and one
+physical keyboard in control of Emacs.  This can happen with X
+forwarding: with a remote Emacs daemon and multiple frames created
+with a command like `ssh -X daemon-host emacsclient -c', then from
+the remote Emacs daemon's point of view there is one terminal and
+one keyboard per `ssh -X daemon-host' command invoked, but in fact a
+single local X server displays all frames, and there is just one
+physical keyboard.  In this situation, you may prefer to have the
+different frames behave as though they had been created with
+\\[make-frame-command].  In that case, starting a recursive edit in \
+one frame does
+not mean that keyboard input into other frames is blocked.
+
+If this option is non-nil, Emacs will not enter single-keyboard
+mode when entering a recursive edit.  It will still enter
+single-keyboard mode in certain other cases where doing so is
+necessary for the operation to work at all.  */);
+  multiple_terminals_merge_keyboards = false;
 
   pdumper_do_now_and_after_load (syms_of_keyboard_for_pdumper);
 
