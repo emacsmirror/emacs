@@ -4451,6 +4451,10 @@ at BEG.  Likewise, if the targeted overlays end after END, they
 will be altered so that they start at END.  Overlays that start
 at or after BEG and end before END will be removed completely.
 
+Empty overlays will be removed if they are at BEG, between BEG
+and END, or at END provided END denotes the position at the end
+of the buffer.
+
 BEG and END default respectively to the beginning and end of the
 buffer.
 Values are compared with `eq'.
