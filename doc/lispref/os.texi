@@ -713,7 +713,10 @@ the Emacs process.  (This is useful primarily in batch operation; see
 
 If @var{exit-data} is a string, its contents are stuffed into the
 terminal input buffer so that the shell (or whatever program next reads
-input) can read them.
+input) can read them.  This is only possible on some systems.  Note that
+recent versions of GNU/Linux disable the system API required for
+stuffing the string into the terminal input, so this might not work on
+your system without special privileges.
 
 If @var{exit-data} is neither an integer nor a string, or is omitted,
 that means to use the (system-specific) exit status which indicates
