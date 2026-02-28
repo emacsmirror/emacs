@@ -5143,11 +5143,11 @@ about encoding which is not currently made available to Lisp."
                      (+ (length arg) 3)
                    (length arg))))
         (cond ((<= (+ fixed-args-len next-len len)
-                   command-line-max-length)
+                   (connection-local-value command-line-max-length))
                (push arg next)
                (incf next-len len))
               ((<= (+ fixed-args-len len)
-                   command-line-max-length)
+                   (connection-local-value command-line-max-length))
                (push (nreverse next) all-partitions)
                (setq next (list arg) next-len len))
               (t
