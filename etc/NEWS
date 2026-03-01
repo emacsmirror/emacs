@@ -4440,6 +4440,11 @@ Transformed images are smoothed using the bilinear interpolation by
 means of the GDI+ library.
 
 ---
+** Emacs on MS-Windows is now capable of exporting frame screenshots to files.
+The new primitive 'w32-export-frame' can be used to export a screenshot
+of a specified frame to an image file in one of the supported image
+formats, such as JPEG or PNG.
+---
 ** Emacs on MS-Windows now supports the ':data' keyword for 'play-sound'.
 In addition to ':file FILE' for playing a sound from a file, ':data
 DATA' can now be used to play a sound from memory.
