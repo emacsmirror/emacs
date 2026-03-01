@@ -405,8 +405,12 @@ of[ \t]+\"?\\([a-zA-Z]?:?[^\":\n]+\\)\"?:" 3 2 nil (1))
     (ruby-Test::Unit
      "^    [[ ]?\\([^ (].*\\):\\([1-9][0-9]*\\)\\(\\]\\)?:in " 1 2)
 
+    ;; This must precede the `gnu' rule or the latter would match instead.
     (rust-panic
-     ,(rx bol (opt "    ")
+     ,(rx bol
+          ;; The test runner cargo-nextest indents its output by four spaces
+          ;; by default, although that can be disabled.
+          (opt "    ")
           "thread '" (+ nonl) "' " (? "(" (+ digit) ") ")
           (group-n 1 "panicked" ) " at"
           " " (group-n 2 (+ nonl))  ; file
