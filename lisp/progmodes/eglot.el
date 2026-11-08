@@ -1342,8 +1342,16 @@ when processing many ranges."
   (mapcar #'cdr (eglot--languages s)))
 
 (defun eglot--server-name (s)
-  "Name server S, consulting LSP `serverInfo' if available."
-  (or (plist-get (eglot--server-info s) :name) (jsonrpc-name s)))
+  "Name server S, consulting LSP `serverInfo' if available.
+Otherwise, use the server program's name or, for network connections,
+the managed major modes."
+  (or (plist-get (eglot--server-info s) :name)
+      (let* ((proc (jsonrpc--process s))
+             (cmd (or (process-get proc 'remote-command)
+                      (process-command proc))))
+        (and (consp cmd) (stringp (car cmd))
+             (file-name-nondirectory (car cmd))))
+      (format "%S" (eglot--major-modes s))))
 
 (defun eglot--server-buffer-name (server &optional suffix)
   "Standard buffer name for SERVER with optional SUFFIX."
@@ -1892,8 +1900,7 @@ EVENTS-BUFFER is passed as the `:events-buffer' initarg of
                           (eglot--message
                            "Connected! Server `%s' now managing `%S' buffers \
 in project `%s'."
-                           (or (plist-get serverInfo :name)
-                               (jsonrpc-name server))
+                           (eglot--server-name server)
                            managed-modes
                            (eglot-project-nickname server))
                           (when tag (throw tag t))))
