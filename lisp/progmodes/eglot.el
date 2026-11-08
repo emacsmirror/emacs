@@ -5151,7 +5151,7 @@ See `eglot--semtok-request' implementation for details.")
   :global nil
   (setq eglot--semtok-state nil)
   (cond (eglot-semantic-tokens-mode
-         (if (not (eglot-server-capable :semanticTokensProvider))
+         (if (not (eglot-server-capable :semanticTokensProvider :full))
              (eglot-semantic-tokens-mode -1)
            (add-hook 'eglot--send-changes-hook
                      #'eglot--semtok-after-send-changes)
