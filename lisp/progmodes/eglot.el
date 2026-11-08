@@ -4585,11 +4585,12 @@ happens to be inside or matching the project root."
          (cond ((not (file-readable-p subdir)))
                ((and eglot-max-file-watches
                      (>= watch-count eglot-max-file-watches))
+                ;; Keep partial watches.  Erroring out would lose all
+                ;; of them, and some servers exit on a failed
+                ;; registration (bug#81363).  Return nil to stop caller.
                 (eglot--warn "Reached `eglot-max-file-watches' limit of %d, \
 not watching some directories" eglot-max-file-watches)
-                ;; Could `(setq success t)' here to keep partial watches.
-                (jsonrpc-error "Reached `eglot-max-file-watches' limit of %d"
-                               eglot-max-file-watches))
+                nil)
                (t
                 (push (file-notify-add-watch subdir '(change) #'handle-event)
                       (gethash id (eglot--file-watches server)))
@@ -4599,7 +4600,8 @@ not watching some directories" eglot-max-file-watches)
                      (condition-case _ (subdirs-using-find)
                        (error (subdirs-using-project))))))
       (unwind-protect
-          (cl-loop for sd in subdirs do (add-watch sd) finally (setq success t))
+          (cl-loop for sd in subdirs while (add-watch sd)
+                   finally (setq success t))
         (unless success
           (eglot-unregister-capability server 'workspace/didChangeWatchedFiles id))))))
 
