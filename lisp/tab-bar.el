@@ -1944,6 +1944,12 @@ to which to move the tab; ARG defaults to 1."
               tab-bar-closed-tabs)
           (tab-bar-close-tab from-number)))
       (tab-bar-tabs-set to-tabs to-frame)
+      (when tab-bar-show
+        (if (not tab-bar-mode)
+            ;; Turn on `tab-bar-mode' since a new tab has been added to
+            ;; the frame.  Note: this also updates `tab-bar-lines'.
+            (tab-bar-mode 1)
+          (tab-bar--update-tab-bar-lines (list to-frame))))
       (force-mode-line-update t))))
 
 (defun tab-bar-detach-tab (&optional from-number)
