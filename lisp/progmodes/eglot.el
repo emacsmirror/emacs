@@ -4547,9 +4547,15 @@ the directory to watch (nil means entire project).  IN-ROOT says if DIR
 happens to be inside or matching the project root."
   (cl-labels
       ((subdirs-using-project ()
-         (delete-dups
-          (mapcar #'file-name-directory
-                  (project-files project (and dir (list dir))))))
+         (let* ((files (project-files project (and dir (list dir))))
+                ;; Consulting handlers for every file is 20x slower
+                ;; in large projects, so dedupe without them first.
+                (dirs (let ((file-name-handler-alist nil))
+                        (delete-dups (mapcar #'file-name-directory files)))))
+           ;; Then let Tramp normalize the fewer remote directories.
+           (if (eglot--trampish-p server)
+               (delete-dups (mapcar #'file-name-directory dirs))
+             dirs)))
        (subdirs-using-find ()
          (with-temp-buffer
            (call-process find-program nil t nil dir "-type" "d" "-print0")
