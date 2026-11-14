@@ -4581,24 +4581,26 @@ happens to be inside or matching the project root."
             ((eq action 'renamed)
              (handle-event `(,desc deleted ,file))
              (handle-event `(,desc created ,file1))))))
+       (at-limit-p ()
+         (when (and eglot-max-file-watches
+                    (>= watch-count eglot-max-file-watches))
+           (eglot--warn "Reached `eglot-max-file-watches' limit of %d, \
+not watching some directories" eglot-max-file-watches)
+           t))
        (add-watch (subdir)
          (cond ((not (file-readable-p subdir)))
-               ((and eglot-max-file-watches
-                     (>= watch-count eglot-max-file-watches))
-                ;; Keep partial watches.  Erroring out would lose all
-                ;; of them, and some servers exit on a failed
-                ;; registration (bug#81363).  Return nil to stop caller.
-                (eglot--warn "Reached `eglot-max-file-watches' limit of %d, \
-not watching some directories" eglot-max-file-watches)
-                nil)
+               ;; Keep partial watches.  Erroring out would lose all
+               ;; of them, and some servers exit on a failed
+               ;; registration (bug#81363).  Return nil to stop caller.
+               ((at-limit-p) nil)
                (t
                 (push (file-notify-add-watch subdir '(change) #'handle-event)
                       (gethash id (eglot--file-watches server)))
                 (cl-incf watch-count)))))
-    (let ((subdirs (if (or (null dir) in-root)
-                       (subdirs-using-project)
-                     (condition-case _ (subdirs-using-find)
-                       (error (subdirs-using-project))))))
+    (let ((subdirs (cond ((at-limit-p) nil) ; skip costly scan (bug#81363)
+                         ((or (null dir) in-root) (subdirs-using-project))
+                         (t (condition-case _ (subdirs-using-find)
+                              (error (subdirs-using-project)))))))
       (unwind-protect
           (cl-loop for sd in subdirs while (add-watch sd)
                    finally (setq success t))
