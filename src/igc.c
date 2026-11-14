@@ -6362,6 +6362,7 @@ igc_busy_p (void)
 void
 igc_defer_sigprof (bool enable)
 {
+#ifndef WINDOWSNT
   struct sigaction sa;
   int result = sigaction (SIGSEGV, NULL, &sa);
   eassert (result == 0);
@@ -6372,6 +6373,15 @@ igc_defer_sigprof (bool enable)
   eassert (result == 0);
   result = sigaction (SIGSEGV, &sa, NULL);
   eassert (result == 0);
+#else	/* WINDOWSNT */
+  /* The Windows emulation of sigaction ignores sa_mask, and we don't
+     want to handle SIGSEGV from MPS.  All we want is not to invoke
+     SIGPROF handler when SIGPROF is disabled.  */
+  sigset_t prof_set;
+  sigemptyset (&prof_set);
+  sigaddset (&prof_set, SIGPROF);
+  sigprocmask (enable ? SIG_UNBLOCK : SIG_BLOCK, &prof_set, NULL);
+#endif	/* WINDOWSNT */
 }
 
 /* Warn if PTR looks like an MPS reference, which is most likely a
