@@ -788,11 +788,15 @@ slot_to_index (int slot)
 #define IGC_MA_FREE_LIST(v) (v)->contents[IGC_IDX_FREE_LIST]
 #define IGC_MA_HEAD(v) (v)->contents[IGC_IDX_HEAD]
 
-#define IGC_MA_MARKER(v, slot) (v)->contents[slot_to_index (slot) + IGC_OFF_MARKER]
-#define IGC_MA_NEXT(v, slot) (v)->contents[slot_to_index (slot) + IGC_OFF_NEXT]
-#define IGC_MA_PREV(v, slot) (v)->contents[slot_to_index (slot) + IGC_OFF_PREV]
+#define IGC_MA_MARKER(v, slot) \
+  (v)->contents[slot_to_index (slot) + IGC_OFF_MARKER]
+#define IGC_MA_NEXT(v, slot) \
+  (v)->contents[slot_to_index (slot) + IGC_OFF_NEXT]
+#define IGC_MA_PREV(v, slot) \
+  (v)->contents[slot_to_index (slot) + IGC_OFF_PREV]
 
-#define IGC_MA_CAPACITY(v) (((v)->header.size - IGC_IDX_START) / IGC_MA_NSLOTS)
+#define IGC_MA_CAPACITY(v) \
+  (((v)->header.size - IGC_IDX_START) / IGC_MA_NSLOTS)
 
 INLINE struct marker_it
 marker_it_init (struct buffer *b)

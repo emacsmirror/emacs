@@ -4054,7 +4054,7 @@ the buffer if BEG and/or END are outside of the narrowing.  */)
     return Qnil;
 
   len = 10;
- #ifdef HAVE_MPS
+#ifdef HAVE_MPS
   overlay_vec = igc_xzalloc_ambig (len * sizeof *overlay_vec, __func__);
 #else
   overlay_vec = xmalloc (len * sizeof *overlay_vec);
