@@ -1707,6 +1707,7 @@ allocate_string (void)
   return s;
 }
 
+
 /* Set up Lisp_String S for holding NCHARS characters, NBYTES bytes,
    plus a NUL byte at the end.  Allocate an sdata structure DATA for
    S, and set S->u.s.data to SDATA->u.data.  Store a NUL byte at the
@@ -2509,42 +2510,6 @@ make_float (double float_value)
 #endif
 }
 
-
-static void *
-xmalloc_for_gmp (size_t size)
-{
-  tally_consing (size);
-  return xmalloc (size);
-}
-
-static void *
-xrealloc_for_gmp (void *ptr, size_t old_size, size_t new_size)
-{
-  tally_consing (new_size - old_size);
-  return xrealloc (ptr, new_size);
-}
-
-static void
-xfree_for_gmp (void *ptr, size_t size)
-{
-  tally_consing (-size);
-  xfree (ptr);
-}
-
-void
-init_gmp_memory_functions (void)
-{
-  /* FIXME: The Info node `(gmp) Custom Allocation' states: "No error
-     return is allowed from any of these functions, if they return
-     then they must have performed the specified operation. [...]
-       There's currently no defined way for the allocation functions
-     to recover from an error such as out of memory, they must
-     terminate program execution.  A 'longjmp' or throwing a C++
-     exception will have undefined results."  But xmalloc and xrealloc
-     do call 'longjmp'.  */
-  mp_set_memory_functions (xmalloc_for_gmp, xrealloc_for_gmp,
-			   xfree_for_gmp);
-}
 
 
 /***********************************************************************
@@ -2592,14 +2557,16 @@ struct cons_block
 
 enum { memory_full_cons_threshold = sizeof (struct cons_block) };
 
-
 /* Current cons_block.  */
+
 static struct cons_block *cons_block;
 
 /* Index of first unused Lisp_Cons in the current block.  */
+
 static int cons_block_index = CONS_BLOCK_SIZE;
 
 /* Free-list of Lisp_Cons structures.  */
+
 static struct Lisp_Cons *cons_free_list;
 
 #if GC_ASAN_POISON_OBJECTS
@@ -3113,7 +3080,7 @@ vectorlike_nbytes (const struct vectorlike_header *hdr)
 		<= VBLOCK_BYTES_MAX), \
 	       (struct t *) (p))
 
-/* Release extra resources still in use by VECTOR, whicth may be any
+/* Release extra resources still in use by VECTOR, which may be any
    small vector-like object.  */
 #ifndef HAVE_MPS
 static void
@@ -4080,7 +4047,6 @@ vector_marked_p (const struct Lisp_Vector *v)
           eassert (PSEUDOVECTOR_TYPE (v) == PVEC_BOOL_VECTOR);
           return true;
         }
-
       return pdumper_marked_p (v);
     }
   return XVECTOR_MARKED_P (v);
@@ -4769,6 +4735,7 @@ live_cons_p (struct mem_node *m, void *p)
   return live_cons_holding (m, p) == p;
 }
 
+
 /* If P is a pointer into a live Lisp symbol object on the heap,
    return the object's address.  Otherwise, return NULL.  M points to the
    mem_block for P.  */
@@ -4822,6 +4789,7 @@ live_symbol_p (struct mem_node *m, void *p)
 {
   return live_symbol_holding (m, p) == p;
 }
+
 
 /* If P is a (possibly-tagged) pointer to a live Lisp_Float on the
    heap, return the address of the Lisp_Float.  Otherwise, return NULL.
@@ -6037,6 +6005,7 @@ garbage_collect (void)
 #ifdef HAVE_PGTK
   mark_pgtkterm ();
 #endif
+
 #ifdef USE_GTK
   xg_mark_data ();
 #endif
@@ -6101,6 +6070,7 @@ garbage_collect (void)
   eassert (weak_hash_tables == NULL);
 
   eassert (mark_stack_empty_p ());
+
   gc_sweep ();
 
   unmark_main_thread ();
