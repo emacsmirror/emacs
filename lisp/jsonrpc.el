@@ -45,6 +45,21 @@
 (require 'pcase)
 
 
+(define-obsolete-variable-alias 'jrpc-default-request-timeout
+  'jsonrpc-default-request-timeout "28.1")
+
+(defgroup jsonrpc nil
+  "JSON-RPC customization."
+  :prefix "jsonrpc-"
+  :group 'comm)
+
+(defcustom jsonrpc-default-request-timeout 10
+  "Time in seconds before timing out a JSON-RPC request without response."
+  :version "30.1"
+  :type 'number
+  :safe 'numberp
+  :group 'jsonrpc)
+
 ;;; Public API
 ;;;
 
@@ -499,7 +514,11 @@ to the original request (normal or error) are ignored."
             :timeout-fn
             (lambda ()
               (unless canceled
-                (setq retval '(error (jsonrpc-error-message . "Timed out")))
+                (setq retval
+                      `(error (jsonrpc-error-message
+                               . ,(format "Timed out after %s seconds"
+                                          (or timeout
+                                              jsonrpc-default-request-timeout)))))
                 (throw tag nil)))
             `(,@(when (plist-member args :deferred) `(:deferred ,deferred))
               ,@(when (plist-member args :timeout) `(:timeout  ,timeout)))))
@@ -536,7 +555,8 @@ to the original request (normal or error) are ignored."
     (cond ((eq 'error (car retval))
            (signal 'jsonrpc-error
                    (cons
-                    (format "request id=%s failed:" (car id-and-timer))
+                    (format "request id=%s (%s) failed:"
+                            (car id-and-timer) method)
                     (cdr retval)))))
     (cadr retval)))
 
@@ -546,21 +566,6 @@ CONNECTION, METHOD and PARAMS as in `jsonrpc-async-request' (which see)."
   (apply #'jsonrpc-connection-send connection
          :method method
          (unless (eq params :jsonrpc-omit) `(:params ,params))))
-
-(define-obsolete-variable-alias 'jrpc-default-request-timeout
-  'jsonrpc-default-request-timeout "28.1")
-
-(defgroup jsonrpc nil
-  "JSON-RPC customization."
-  :prefix "jsonrpc-"
-  :group 'comm)
-
-(defcustom jsonrpc-default-request-timeout 10
-  "Time in seconds before timing out a JSON-RPC request without response."
-  :version "30.1"
-  :type 'number
-  :safe 'numberp
-  :group 'jsonrpc)
 
 
 ;;; Specific to `jsonrpc-process-connection'
