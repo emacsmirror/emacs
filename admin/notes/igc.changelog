@@ -64,7 +64,9 @@
 	* doc/lispref/internals.texi (Garbage Collection): Union
 	vectorlike_header is now a struct.
 
-	* configure.ac: Add --with-mps, enable-hecking igc_check_fwd and igc_debug.
+	* configure.ac: Add new options --with-mps[=yes|no|debug] and
+	--disable-igc-ephemeron-pool[=yes|no].  For --enable-checking, add
+	sub-options igc_debug, igc_debug_alloc, igc_check_fwd.
 
 	* build-aux/git-hooks/pre-commit (nnonmpsfiles): Add hook to keep
 	commits to MPS separate.
@@ -97,9 +99,6 @@
 
 	* lisp/emacs-lisp/igc.el: New file.
 
-!!	* lisp/emacs-lisp/comp.el (batch-native-compile): Bind native comp
-	speed safety and debug variables from environment variables.
-
 	* src/Makefile.in (IGCOBJ, MPSOBJ, MPS_CFLAGS): Add.
 	(EMACS_CFLAGS): Add MPS_CFLAGS.
 	(base_obj): Add IGCOBJ, gc_handles.o.
@@ -108,18 +107,15 @@
 	(mps.o): New rule for building mps.o.
 	(ctagsfiles1): Add MPS files for ctags files.
 
-!!	* src/.lldbinit: should be reverted to master, I think.
-
 	* src/.gdbinit: Pass some signals if HAVE_MPS.
 
 !!	* src/alloc.c: Put everyting not needed for igc in #ifndef
 	HAVE_MPS or similar. Call functions from igc.c to allocate objects,
 	if HAVE_MPS.
 
-	* src/bignum.c (xrealloc_for_gmp, xfree_for_gmp): Remove.
-	(init_bignum): Call init_gmp_memory_functions instead of setting
-	memory functions.
-	(make_bignum_from_mpz) [HAVE_MPS]: New function.
+	* src/bignum.h (struct Lisp_Bignum) [HAVE_MPS]: Store limbs
+	directly in the bignum.
+	* src/bignum.c (make_bignum_from_mpz) [HAVE_MPS]: New function.
 	(make_bignum_bits) [HAVE_MPS]: Use make_bignum_from_mpz.
 	(make_bignum_str) [HAVE_MPS]: New function.
 
