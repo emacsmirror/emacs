@@ -82,8 +82,6 @@
 	* Makefile.in ($(srcdir)/configure): Depend mps/ and exec/
 	configure.ac.
 
-	* .gitignore: Add MPS telemetry output files.
-
 	* .clang-tidy: New file.
 
 	* mps/: New directory.
@@ -121,6 +119,28 @@
 
 	* src/atimer.c (start_atimer) [HAVE_MPS]: Use igc_xzalloc_ambig.
 
-	* src/androidterm.h (GCALIGNED_STRUCT): vectorlike_header is now a struct.
-
+	* src/androidterm.h (GCALIGNED_STRUCT): vectorlike_header is now a
+	struct.
 	* src/androidterm.c (mark_androidterm): Don't define if HAVE_MPS.
+
+	* src/buffer.h (struct buffer_text.markers) [HAVE_MPS]: Use a weak
+	vector for buffer markers.
+	(DO_MARKERS): New macro to iterate over the markers of a buffer.
+	(struct marker_it, marker_it_init, marker_it_valid)
+	(marker_it_next, marker_it_marker): New.  Used to implement the
+	DO_MARKERS macro with different versions for HAVE_MPS.
+	(IGC_IDX_FREE_LIST, IGC_IDX_HEAD, IGC_IDX_START)
+	(IGC_OFF_NEXT, IGC_OFF_PREV, IGC_OFF_MARKER, IGC_MA_NSLOTS)
+	(slot_to_index, IGC_MA_FREE_LIST, IGC_MA_HEAD, IGC_MA_MARKER)
+	(IGC_MA_NEXT, IGC_MA_PREV, IGC_MA_CAPACITY)
+	[HAVE_MPS]: New macros and constants for the internal structure of
+	marker arrays.
+
+	* src/buffer.c (Fget_buffer_create, Fkill_buffer, Fkill_buffer)
+	(Fbuffer_swap_text, Fset_buffer_multibyte, Fset_buffer_multibyte):
+	Adjust to work with igc's weak marker array.
+	(overlays_in, Foverlays_at, Foverlays_in) [HAVE_MPS]: Use an
+	ambiguously scanned root for the temporary array.
+	(record_overlay_string) [HAVE_MPS]: Use ambiguously scanned roots
+	for the sortstr buffers that end up in overlay_heads.buf and
+	overlay_tails.buf.
